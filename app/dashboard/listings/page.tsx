@@ -99,7 +99,7 @@ export default function MyListingsPage() {
                   {item.title}
                 </h2>
                 <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5, marginBottom: 8 }}>
-                  {item.tagline}
+                  {item.shortDescription}
                 </p>
                 <div style={{ display: "flex", gap: 16, fontSize: 12, color: "#9ca3af" }}>
                   <span>Target: <strong style={{ color: "#111827" }}>{formatCurrency(item.targetFunding)}</strong></span>
