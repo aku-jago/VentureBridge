@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TokenProvider } from "@/contexts/TokenContext";
+import { AdsProvider } from "@/contexts/AdsContext";
+import { OfferProvider } from "@/contexts/OfferContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,7 +38,15 @@ export default function RootLayout({
         />
       </head>
       <body style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <TokenProvider>
+            <AdsProvider>
+              <OfferProvider>
+                <ChatProvider>{children}</ChatProvider>
+              </OfferProvider>
+            </AdsProvider>
+          </TokenProvider>
+        </AuthProvider>
       </body>
     </html>
   );

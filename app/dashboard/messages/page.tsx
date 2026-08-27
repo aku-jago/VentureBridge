@@ -1,97 +1,162 @@
 "use client";
 
-import { useState } from "react";
-import { Send, Search } from "lucide-react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Send,
+  Search,
+  Plus,
+  X,
+  Check,
+  CheckCheck,
+  Sparkles,
+  MessageSquare,
+  Building2,
+  Briefcase,
+  Lock,
+  Bot,
+  FileText,
+  UserPlus,
+  ShieldCheck,
+  Handshake,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
+import { useChat, ChatThread, ChatMessage } from "@/contexts/ChatContext";
+import { useAuth, AuthUser } from "@/contexts/AuthContext";
 
-interface Conversation {
-  id: string;
-  participant: { name: string; initials: string; title: string; color: string };
-  lastMessage: string;
-  lastMessageTime: string;
-  unreadCount: number;
-  isOnline: boolean;
-}
+function MessagesContent() {
+  const searchParams = useSearchParams();
+  const targetUserIdParam = searchParams.get("to");
 
-interface Message {
-  id: string;
-  content: string;
-  role: "me" | "them";
-  timestamp: string;
-}
+  const { user, accounts } = useAuth();
+  const {
+    threads,
+    typingUsers,
+    setMyTypingStatus,
+    sendMessage,
+    getMessagesWithUser,
+    markThreadAsRead,
+    startOrOpenThread,
+  } = useChat();
 
-const CONVERSATIONS: Conversation[] = [
-  {
-    id: "c1",
-    participant: { name: "Budi Santoso", initials: "BS", title: "Managing Partner", color: "#16a34a" },
-    lastMessage: "Senang bisa terhubung! Saya tertarik dengan EDUKITA...",
-    lastMessageTime: "10:30",
-    unreadCount: 2,
-    isOnline: true,
-  },
-  {
-    id: "c2",
-    participant: { name: "Siti Rahmawati", initials: "SR", title: "Co-Founder Candidate", color: "#7c3aed" },
-    lastMessage: "Apakah kita bisa jadwalkan call minggu ini?",
-    lastMessageTime: "Kemarin",
-    unreadCount: 0,
-    isOnline: false,
-  },
-  {
-    id: "c3",
-    participant: { name: "Andi Wijaya", initials: "AW", title: "Syndicate Lead", color: "#dc2626" },
-    lastMessage: "Terima kasih atas pitch deck-nya. Sangat impressive!",
-    lastMessageTime: "Senin",
-    unreadCount: 0,
-    isOnline: true,
-  },
-];
+  const currentUserId = user?.id || (user?.role === "investor" ? "user-3" : "user-1");
 
-const MOCK_MESSAGES: Record<string, Message[]> = {
-  c1: [
-    { id: "m1", content: "Halo! Saya melihat listing EDUKITA di VentureBridge dan sangat tertarik.", role: "them", timestamp: "10:15" },
-    { id: "m2", content: "Halo Pak Budi! Terima kasih sudah melihat listing kami. Senang mendengar Anda tertarik!", role: "me", timestamp: "10:18" },
-    { id: "m3", content: "Model bisnis Anda menarik. Apakah kita bisa menjadwalkan call untuk diskusi lebih lanjut?", role: "them", timestamp: "10:25" },
-    { id: "m4", content: "Tentu! Saya tersedia Rabu atau Kamis minggu ini. Jam berapa yang paling cocok untuk Anda?", role: "me", timestamp: "10:27" },
-    { id: "m5", content: "Rabu jam 14.00 WIB bagaimana? Saya akan kirimkan link Google Meet.", role: "them", timestamp: "10:30" },
-    { id: "m6", content: "Apakah Anda bisa mempersiapkan pitch deck dan proyeksi finansial untuk meeting kita?", role: "them", timestamp: "10:30" },
-  ],
-  c2: [
-    { id: "m1", content: "Hi! Saya tertarik untuk bergabung sebagai Co-Founder untuk EDUKITA.", role: "them", timestamp: "Kemarin 14:20" },
-    { id: "m2", content: "Halo Siti! Background Anda di product management sangat relevan. Apakah kita bisa terhubung?", role: "me", timestamp: "Kemarin 16:30" },
-    { id: "m3", content: "Tentu! Apakah kita bisa jadwalkan call minggu ini?", role: "them", timestamp: "Kemarin 17:00" },
-  ],
-  c3: [
-    { id: "m1", content: "Halo! Saya mendapat akses ke pitch deck EDUKITA. Sangat impressive progress-nya!", role: "them", timestamp: "Senin 09:00" },
-    { id: "m2", content: "Terima kasih Pak Andi! Kami senang mendengar itu.", role: "me", timestamp: "Senin 10:30" },
-    { id: "m3", content: "Terima kasih atas pitch deck-nya. Sangat impressive!", role: "them", timestamp: "Senin 11:00" },
-  ],
-};
-
-export default function MessagesPage() {
-  const [activeConv, setActiveConv] = useState(CONVERSATIONS[0]);
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  // Active selected thread (empty by default on initial page load)
+  const [activeOtherUserId, setActiveOtherUserId] = useState<string>("");
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"all" | "unread">("all");
+  const [showNewChatModal, setShowNewChatModal] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
 
-  function handleSend() {
-    if (!newMessage.trim()) return;
-    const msg: Message = {
-      id: `m${Date.now()}`,
-      content: newMessage.trim(),
-      role: "me",
-      timestamp: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
-    };
-    setMessages((prev) => ({
-      ...prev,
-      [activeConv.id]: [...(prev[activeConv.id] ?? []), msg],
-    }));
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const prevMsgCountRef = useRef<number>(0);
+  const isUserScrolledUpRef = useRef<boolean>(false);
+
+  // If ?to= query parameter is explicitly provided, open that chat immediately
+  useEffect(() => {
+    if (targetUserIdParam && targetUserIdParam !== currentUserId) {
+      setActiveOtherUserId(targetUserIdParam);
+      markThreadAsRead(targetUserIdParam);
+    }
+  }, [targetUserIdParam, currentUserId]);
+
+  const activeThread = threads.find((t) => t.id === activeOtherUserId) || null;
+  const currentMessages = activeOtherUserId ? getMessagesWithUser(activeOtherUserId) : [];
+  const isOtherTyping = Boolean(activeOtherUserId && typingUsers[activeOtherUserId]);
+
+  // Handle user scroll detection
+  function handleContainerScroll() {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isUserScrolledUpRef.current = distanceToBottom > 120;
+  }
+
+  // Scroll to bottom ONLY on thread switch or when new message arrives and user is NOT scrolled up
+  useEffect(() => {
+    if (!activeOtherUserId) return;
+
+    const isNewMessage = currentMessages.length > prevMsgCountRef.current;
+    const isThreadChanged = prevMsgCountRef.current === 0;
+
+    if (isThreadChanged || !isUserScrolledUpRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: isThreadChanged ? "auto" : "smooth" });
+    }
+
+    prevMsgCountRef.current = currentMessages.length;
+  }, [activeOtherUserId, currentMessages.length]);
+
+  function handleSelectThread(threadId: string) {
+    prevMsgCountRef.current = 0;
+    isUserScrolledUpRef.current = false;
+    setActiveOtherUserId(threadId);
+    markThreadAsRead(threadId);
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setNewMessage(val);
+
+    // Broadcast genuine typing event only when user actually types
+    if (activeThread) {
+      setMyTypingStatus(activeThread.otherUser.id, true);
+
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+      typingTimerRef.current = setTimeout(() => {
+        setMyTypingStatus(activeThread.otherUser.id, false);
+      }, 1800);
+    }
+  }
+
+  function handleSend(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!newMessage.trim() || !activeThread) return;
+
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+    }
+
+    sendMessage(
+      activeThread.otherUser.id,
+      activeThread.otherUser.name,
+      newMessage.trim()
+    );
     setNewMessage("");
   }
 
-  const currentMessages = messages[activeConv.id] ?? [];
-  const filteredConvs = CONVERSATIONS.filter((c) =>
-    c.participant.name.toLowerCase().includes(searchQuery.toLowerCase())
+  function handleSelectNewMember(acc: AuthUser) {
+    const threadId = startOrOpenThread(acc);
+    setActiveOtherUserId(threadId);
+    markThreadAsRead(threadId);
+    setShowNewChatModal(false);
+    setMemberSearchQuery("");
+  }
+
+  const filteredThreads = threads.filter((t) => {
+    if (activeFilter === "unread" && t.unreadCount === 0) return false;
+    return (
+      t.otherUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.otherUser.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const availableMembers = (accounts || []).filter(
+    (acc) =>
+      acc.id !== currentUserId &&
+      acc.email !== user?.email &&
+      acc.name.toLowerCase() !== user?.name?.toLowerCase() &&
+      (acc.name.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+        (acc.title && acc.title.toLowerCase().includes(memberSearchQuery.toLowerCase())) ||
+        (acc.role && acc.role.toLowerCase().includes(memberSearchQuery.toLowerCase())))
   );
 
   return (
@@ -100,13 +165,13 @@ export default function MessagesPage() {
 
       <main
         className="dashboard-content"
-        style={{ padding: 0, display: "flex", height: "100vh", overflow: "hidden" }}
+        style={{ padding: 0, display: "flex", height: "100vh", overflow: "hidden", background: "#f8fafc" }}
       >
-        {/* Conversation List */}
+        {/* Left Column: Conversation Sidebar */}
         <div
           style={{
-            width: 280,
-            borderRight: "1px solid #e5e7eb",
+            width: 360,
+            borderRight: "1px solid #e2e8f0",
             background: "#fff",
             display: "flex",
             flexDirection: "column",
@@ -114,289 +179,678 @@ export default function MessagesPage() {
           }}
         >
           {/* Header */}
-          <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid #e5e7eb" }}>
-            <h1 style={{ fontSize: 18, fontWeight: 800, color: "#111827", marginBottom: 12 }}>
-              Pesan
-            </h1>
+          <div style={{ padding: "18px 20px", borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>Pesan</h2>
+              </div>
+              <button
+                onClick={() => setShowNewChatModal(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "7px 14px",
+                  background: "linear-gradient(135deg, #16a34a, #059669)",
+                  border: "none",
+                  borderRadius: 10,
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: "0 2px 6px rgba(22,163,74,0.25)",
+                }}
+              >
+                <Plus size={14} /> Obrolan Baru
+              </button>
+            </div>
+
+            {/* Search Box */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                padding: "8px 12px",
-                background: "#f8f9fa",
-                border: "1px solid #e5e7eb",
-                borderRadius: 8,
+                padding: "9px 12px",
+                background: "#f1f5f9",
+                borderRadius: 10,
+                marginBottom: 10,
               }}
             >
-              <Search size={14} color="#9ca3af" />
+              <Search size={15} color="#94a3b8" />
               <input
                 type="text"
-                placeholder="Cari percakapan..."
+                placeholder="Cari percakapan atau nama..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                  flex: 1,
                   border: "none",
                   background: "transparent",
-                  fontSize: 13,
                   outline: "none",
-                  color: "#111827",
+                  fontSize: 13,
+                  width: "100%",
+                  color: "#0f172a",
                 }}
               />
             </div>
-          </div>
 
-          {/* List */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {filteredConvs.map((conv) => (
+            {/* Filter Pills */}
+            <div style={{ display: "flex", gap: 6 }}>
               <button
-                key={conv.id}
-                onClick={() => setActiveConv(conv)}
+                onClick={() => setActiveFilter("all")}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "12px 16px",
-                  width: "100%",
-                  textAlign: "left",
-                  background: activeConv.id === conv.id ? "#eff6ff" : "transparent",
+                  padding: "4px 14px",
+                  borderRadius: 999,
                   border: "none",
-                  borderBottom: "1px solid #f3f4f6",
+                  background: activeFilter === "all" ? "#0f172a" : "#f1f5f9",
+                  color: activeFilter === "all" ? "#fff" : "#64748b",
+                  fontSize: 12,
+                  fontWeight: 700,
                   cursor: "pointer",
-                  transition: "background 0.15s ease",
                 }}
               >
-                {/* Avatar */}
-                <div style={{ position: "relative", flexShrink: 0 }}>
+                Semua
+              </button>
+              <button
+                onClick={() => setActiveFilter("unread")}
+                style={{
+                  padding: "4px 14px",
+                  borderRadius: 999,
+                  border: "none",
+                  background: activeFilter === "unread" ? "#16a34a" : "#f1f5f9",
+                  color: activeFilter === "unread" ? "#fff" : "#64748b",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Belum Dibaca
+              </button>
+            </div>
+          </div>
+
+          {/* Conversation List */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {filteredThreads.length === 0 ? (
+              <div style={{ padding: "50px 20px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+                <MessageSquare size={36} color="#cbd5e1" style={{ margin: "0 auto 10px" }} />
+                Tidak ada percakapan.
+              </div>
+            ) : (
+              filteredThreads.map((thread) => {
+                const isSelected = thread.id === activeOtherUserId;
+                const isTyping = Boolean(typingUsers[thread.id]);
+
+                return (
                   <div
+                    key={thread.id}
+                    onClick={() => handleSelectThread(thread.id)}
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      background: conv.participant.color,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#fff",
+                      gap: 12,
+                      padding: "14px 18px",
+                      cursor: "pointer",
+                      background: isSelected ? "#f0fdf4" : "transparent",
+                      borderLeft: isSelected ? "4px solid #16a34a" : "4px solid transparent",
+                      borderBottom: "1px solid #f8fafc",
+                      transition: "all 0.15s ease",
                     }}
                   >
-                    {conv.participant.initials}
-                  </div>
-                  {conv.isOnline && (
+                    {/* Avatar with Online Dot */}
                     <div
                       style={{
-                        position: "absolute",
-                        bottom: 0,
-                        right: 0,
-                        width: 10,
-                        height: 10,
+                        width: 44,
+                        height: 44,
                         borderRadius: "50%",
-                        background: "#16a34a",
-                        border: "2px solid #fff",
+                        background: thread.otherUser.avatarColor || "#2563eb",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#fff",
+                        flexShrink: 0,
+                        position: "relative",
                       }}
-                    />
-                  )}
-                </div>
+                    >
+                      {thread.otherUser.initials}
+                      {thread.isOnline && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 1,
+                            right: 1,
+                            width: 11,
+                            height: 11,
+                            borderRadius: "50%",
+                            background: "#16a34a",
+                            border: "2px solid #fff",
+                          }}
+                        />
+                      )}
+                    </div>
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
-                      {conv.participant.name}
-                    </span>
-                    <span style={{ fontSize: 11, color: "#9ca3af" }}>{conv.lastMessageTime}</span>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#9ca3af",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      marginTop: 2,
-                    }}
-                  >
-                    {conv.lastMessage}
-                  </div>
-                </div>
+                    {/* Meta */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {thread.otherUser.name}
+                        </span>
+                        <span style={{ fontSize: 11, color: isSelected ? "#16a34a" : "#94a3b8", flexShrink: 0, fontWeight: isSelected ? 600 : 400 }}>
+                          {thread.lastMessageTime}
+                        </span>
+                      </div>
 
-                {conv.unreadCount > 0 && (
-                  <div
-                    style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: "50%",
-                      background: "#2563eb",
-                      color: "#fff",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {conv.unreadCount}
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        {thread.lastMessageIsMe && !isTyping && (
+                          <span style={{ display: "inline-flex", alignItems: "center", flexShrink: 0 }}>
+                            {thread.lastMessageIsRead ? (
+                              <CheckCheck size={14} color="#0284c7" />
+                            ) : (
+                              <CheckCheck size={14} color="#94a3b8" />
+                            )}
+                          </span>
+                        )}
+
+                        {isTyping ? (
+                          <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 700, fontStyle: "italic" }}>
+                            sedang mengetik...
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {thread.lastMessage}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Unread Badge */}
+                    {!isSelected && thread.unreadCount > 0 && (
+                      <span
+                        style={{
+                          background: "#16a34a",
+                          color: "#fff",
+                          fontSize: 10,
+                          fontWeight: 800,
+                          padding: "2px 7px",
+                          borderRadius: 999,
+                        }}
+                      >
+                        {thread.unreadCount}
+                      </span>
+                    )}
                   </div>
-                )}
-              </button>
-            ))}
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* Chat Window */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            background: "#f8f9fa",
-          }}
-        >
-          {/* Chat Header */}
-          <div
-            style={{
-              padding: "16px 24px",
-              background: "#fff",
-              borderBottom: "1px solid #e5e7eb",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
+        {/* Right Column: Chat Room or VentureBridge Empty State */}
+        {activeThread ? (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8fafc" }}>
+            {/* Header */}
             <div
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                background: activeConv.participant.color,
+                padding: "14px 24px",
+                background: "#fff",
+                borderBottom: "1px solid #e2e8f0",
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                justifyContent: "center",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#fff",
               }}
             >
-              {activeConv.participant.initials}
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
-                {activeConv.participant.name}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: "50%",
+                    background: activeThread.otherUser.avatarColor || "#2563eb",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#fff",
+                  }}
+                >
+                  {activeThread.otherUser.initials}
+                </div>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: "#0f172a" }}>
+                      {activeThread.otherUser.name}
+                    </span>
+                    <span style={{ fontSize: 11, padding: "2px 8px", background: activeThread.otherUser.role === "investor" ? "#f0fdf4" : "#eff6ff", color: activeThread.otherUser.role === "investor" ? "#16a34a" : "#2563eb", borderRadius: 999, fontWeight: 700, textTransform: "capitalize" }}>
+                      {activeThread.otherUser.role}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, marginTop: 1 }}>
+                    {isOtherTyping ? (
+                      <span style={{ color: "#16a34a", fontWeight: 700 }}>
+                        sedang mengetik...
+                      </span>
+                    ) : activeThread.isOnline ? (
+                      <span style={{ color: "#16a34a", fontWeight: 600 }}>Online</span>
+                    ) : (
+                      <span style={{ color: "#64748b" }}>{activeThread.otherUser.lastSeen}</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: 12, color: activeConv.isOnline ? "#16a34a" : "#9ca3af" }}>
-                {activeConv.isOnline ? "● Online" : "Offline"}
-              </div>
-            </div>
-          </div>
 
-          {/* Messages */}
+              <div>
+                <Link
+                  href={`/profile/${activeThread.otherUser.id}`}
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#2563eb",
+                    textDecoration: "none",
+                    padding: "7px 14px",
+                    background: "#eff6ff",
+                    borderRadius: 8,
+                    border: "1px solid #bfdbfe",
+                  }}
+                >
+                  Lihat Profil Lengkap
+                </Link>
+              </div>
+            </div>
+
+            {/* Message Stream */}
+            <div
+              ref={messagesContainerRef}
+              onScroll={handleContainerScroll}
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              {/* Privacy Notice Banner */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 16px", fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 6, boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+                  <ShieldCheck size={14} color="#16a34a" />
+                  Kerahasiaan komunikasi &amp; negosiasi bisnis Anda terjamin di VentureBridge.
+                </div>
+              </div>
+
+              {currentMessages.map((msg) => {
+                const isMe = msg.senderId === currentUserId;
+
+                return (
+                  <div
+                    key={msg.id}
+                    style={{
+                      display: "flex",
+                      justifyContent: isMe ? "flex-end" : "flex-start",
+                    }}
+                  >
+                    <div
+                      style={{
+                        maxWidth: "68%",
+                        padding: "12px 16px",
+                        borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                        background: isMe ? "linear-gradient(135deg, #16a34a, #059669)" : "#ffffff",
+                        color: isMe ? "#ffffff" : "#0f172a",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                        border: isMe ? "none" : "1px solid #e2e8f0",
+                      }}
+                    >
+                      <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0, whiteSpace: "pre-line", wordBreak: "break-word" }}>
+                        {msg.content}
+                      </p>
+
+                      {/* Timestamp & Read Receipts */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: isMe ? "flex-end" : "flex-start",
+                          gap: 4,
+                          fontSize: 11,
+                          color: isMe ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                          marginTop: 6,
+                        }}
+                      >
+                        <span>{msg.timestamp}</span>
+                        {isMe && (
+                          <span style={{ display: "inline-flex", alignItems: "center" }}>
+                            {msg.isRead ? (
+                              <CheckCheck size={14} color="#38bdf8" />
+                            ) : msg.isDelivered ? (
+                              <CheckCheck size={14} color="rgba(255,255,255,0.7)" />
+                            ) : (
+                              <Check size={14} color="rgba(255,255,255,0.7)" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Real Typing Indicator (Only when other user is actually typing) */}
+              {isOtherTyping && (
+                <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                  <div
+                    style={{
+                      padding: "10px 16px",
+                      borderRadius: "16px 16px 16px 4px",
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ fontSize: 13, color: "#16a34a", fontWeight: 700 }}>
+                      {activeThread.otherUser.name.split(" ")[0]} sedang mengetik
+                    </span>
+                    <span style={{ display: "flex", gap: 3 }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#16a34a" }} />
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#16a34a" }} />
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#16a34a" }} />
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Bar */}
+            <form
+              onSubmit={handleSend}
+              style={{
+                padding: "16px 24px",
+                background: "#fff",
+                borderTop: "1px solid #e2e8f0",
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+              }}
+            >
+              <input
+                type="text"
+                value={newMessage}
+                onChange={handleInputChange}
+                placeholder={`Ketik pesan untuk ${activeThread.otherUser.name}...`}
+                style={{
+                  flex: 1,
+                  padding: "12px 18px",
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  background: "#f8fafc",
+                  fontSize: 14,
+                  outline: "none",
+                  color: "#0f172a",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!newMessage.trim()}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: newMessage.trim() ? "linear-gradient(135deg, #16a34a, #059669)" : "#e2e8f0",
+                  color: "#fff",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: newMessage.trim() ? "pointer" : "not-allowed",
+                  flexShrink: 0,
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <Send size={17} />
+              </button>
+            </form>
+          </div>
+        ) : (
+          /* VentureBridge Custom Theme Hub Empty Screen */
           <div
             style={{
               flex: 1,
-              overflowY: "auto",
-              padding: "24px",
               display: "flex",
               flexDirection: "column",
-              gap: 12,
-            }}
-          >
-            {currentMessages.map((msg) => (
-              <div
-                key={msg.id}
-                style={{
-                  display: "flex",
-                  justifyContent: msg.role === "me" ? "flex-end" : "flex-start",
-                }}
-              >
-                <div
-                  style={{
-                    maxWidth: "60%",
-                    padding: "10px 14px",
-                    borderRadius: msg.role === "me" ? "14px 14px 2px 14px" : "14px 14px 14px 2px",
-                    background: msg.role === "me" ? "#2563eb" : "#fff",
-                    color: msg.role === "me" ? "#fff" : "#111827",
-                    fontSize: 14,
-                    lineHeight: 1.5,
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-                  }}
-                >
-                  {msg.content}
-                  <div
-                    style={{
-                      fontSize: 11,
-                      opacity: 0.7,
-                      marginTop: 4,
-                      textAlign: "right",
-                    }}
-                  >
-                    {msg.timestamp}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Input */}
-          <div
-            style={{
-              padding: "16px 24px",
-              background: "#fff",
-              borderTop: "1px solid #e5e7eb",
-              display: "flex",
-              gap: 10,
               alignItems: "center",
+              justifyContent: "center",
+              background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+              padding: "48px 32px",
+              textAlign: "center",
             }}
           >
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Ketik pesan..."
+            {/* Branded Icon */}
+            <div
               style={{
-                flex: 1,
-                padding: "10px 14px",
-                border: "1px solid #e5e7eb",
-                borderRadius: 10,
-                fontSize: 14,
-                color: "#111827",
-                background: "#f8f9fa",
-                outline: "none",
-              }}
-              onFocus={(e) => {
-                e.target.style.background = "#fff";
-                e.target.style.borderColor = "#2563eb";
-              }}
-              onBlur={(e) => {
-                e.target.style.background = "#f8f9fa";
-                e.target.style.borderColor = "#e5e7eb";
-              }}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!newMessage.trim()}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                background: newMessage.trim() ? "#2563eb" : "#e5e7eb",
-                border: "none",
-                cursor: newMessage.trim() ? "pointer" : "not-allowed",
+                width: 88,
+                height: 88,
+                borderRadius: 24,
+                background: "linear-gradient(135deg, #16a34a 0%, #0d9488 100%)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transition: "background 0.15s ease",
-                flexShrink: 0,
+                color: "#fff",
+                boxShadow: "0 12px 28px -6px rgba(22,163,74,0.3)",
+                marginBottom: 24,
               }}
             >
-              <Send size={16} color={newMessage.trim() ? "#fff" : "#9ca3af"} />
+              <MessageSquare size={42} />
+            </div>
+
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>
+              Hub Komunikasi Ekosistem VentureBridge
+            </h2>
+            <p style={{ fontSize: 14, color: "#64748b", maxWidth: 520, lineHeight: 1.6, marginBottom: 28 }}>
+              Terhubung langsung dengan angel investor, founder startup, dan pemilik capex. Pilih salah satu percakapan di sebelah kiri untuk membuka ruang diskusi.
+            </p>
+
+            {/* Feature Highlights Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, maxWidth: 640, marginBottom: 32 }}>
+              <div style={{ background: "#fff", padding: "16px", borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "left" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                  <Handshake size={18} color="#16a34a" />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 3 }}>Direct Deals</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>Negosiasi langsung modal &amp; capex</div>
+              </div>
+
+              <div style={{ background: "#fff", padding: "16px", borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "left" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                  <ShieldCheck size={18} color="#2563eb" />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 3 }}>Kerahasiaan</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>Pesan terenkripsi dan aman</div>
+              </div>
+
+              <div style={{ background: "#fff", padding: "16px", borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "left" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                  <Sparkles size={18} color="#7c3aed" />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 3 }}>AI Copilot</div>
+                <div style={{ fontSize: 12, color: "#64748b" }}>Bantuan analisis peluang deal</div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowNewChatModal(true)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "11px 22px",
+                background: "linear-gradient(135deg, #16a34a, #059669)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 12,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(22,163,74,0.25)",
+              }}
+            >
+              <Plus size={16} /> Mulai Obrolan Baru
             </button>
           </div>
-        </div>
+        )}
       </main>
+
+      {/* NEW CHAT MODAL */}
+      {showNewChatModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowNewChatModal(false);
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 20,
+              width: "100%",
+              maxWidth: 480,
+              padding: "24px 28px",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>
+                Mulai Obrolan Baru
+              </div>
+              <button
+                onClick={() => setShowNewChatModal(false)}
+                style={{ background: "#f1f5f9", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Search members */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "9px 12px",
+                background: "#f8fafc",
+                borderRadius: 10,
+                border: "1px solid #e2e8f0",
+                marginBottom: 16,
+              }}
+            >
+              <Search size={16} color="#94a3b8" />
+              <input
+                type="text"
+                placeholder="Cari nama investor, founder, atau pemilik capex..."
+                value={memberSearchQuery}
+                onChange={(e) => setMemberSearchQuery(e.target.value)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  outline: "none",
+                  fontSize: 13,
+                  width: "100%",
+                  color: "#0f172a",
+                }}
+              />
+            </div>
+
+            <div style={{ maxHeight: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+              {availableMembers.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "30px", color: "#94a3b8", fontSize: 13 }}>
+                  Tidak ada anggota yang cocok.
+                </div>
+              ) : (
+                availableMembers.map((acc) => (
+                  <button
+                    key={acc.id || acc.email}
+                    onClick={() => handleSelectNewMember(acc)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid #e2e8f0",
+                      background: "#fff",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "#f0fdf4";
+                      (e.currentTarget as HTMLElement).style.borderColor = "#bbf7d0";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "#fff";
+                      (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: "50%",
+                        background: acc.avatarColor || (acc.role === "investor" ? "#16a34a" : "#2563eb"),
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "#fff",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {acc.initials}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>
+                          {acc.name}
+                        </span>
+                        <span style={{ fontSize: 10, padding: "2px 6px", background: acc.role === "investor" ? "#f0fdf4" : "#eff6ff", color: acc.role === "investor" ? "#16a34a" : "#2563eb", borderRadius: 999, fontWeight: 700, textTransform: "capitalize" }}>
+                          {acc.role}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                        {acc.title}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "40px", textAlign: "center" }}>Memuat percakapan...</div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }

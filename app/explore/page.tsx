@@ -1,562 +1,271 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Sparkles, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { Footer } from "@/components/layout/Footer";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
-import { OpportunityCard } from "@/components/venturebridge/OpportunityCard";
-import { mockOpportunities } from "@/data/mock";
+import { mockOpportunities, mockCapexListings } from "@/data/mock";
 import { useAuth } from "@/contexts/AuthContext";
-import type { BusinessStage } from "@/types";
+import {
+  Lightbulb,
+  Building2,
+  ArrowRight,
+  Sparkles,
+  TrendingUp,
+  MapPin,
+  Users,
+} from "lucide-react";
 
-const SECTORS = ["AgriTech", "FinTech", "HealthTech", "EdTech"];
-const STAGES: { value: BusinessStage | "all"; label: string }[] = [
-  { value: "ideation", label: "Ideation" },
-  { value: "pre_seed", label: "Pre-Seed" },
-  { value: "seed", label: "Seed" },
-  { value: "early_stage", label: "Early Stage" },
-];
-const SEEKING = [
-  { value: "investor", label: "Investor" },
-  { value: "cofounder", label: "Co-Founder" },
-  { value: "mentor", label: "Mentor" },
-];
+export default function ExploreHubPage() {
+  const { isLoggedIn } = useAuth();
 
-export default function ExplorePage() {
-  const { user, isLoggedIn } = useAuth();
+  const verifiedIdeas = mockOpportunities.filter((o) => o.verificationStatus === "verified");
+  const verifiedCapex = mockCapexListings.filter((c) => c.verificationStatus === "verified");
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSectors, setSelectedSectors] = useState<string[]>(["FinTech"]);
-  const [selectedStages, setSelectedStages] = useState<string[]>(["Seed"]);
-  const [selectedSeeking, setSelectedSeeking] = useState<string[]>(["Investor"]);
-  const [sortBy, setSortBy] = useState("Direkomendasikan AI");
-  const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  function toggleSector(sector: string) {
-    setSelectedSectors((prev) =>
-      prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector]
-    );
-  }
-
-  function toggleStage(stage: string) {
-    setSelectedStages((prev) =>
-      prev.includes(stage) ? prev.filter((s) => s !== stage) : [...prev, stage]
-    );
-  }
-
-  function toggleSeeking(seeking: string) {
-    setSelectedSeeking((prev) =>
-      prev.includes(seeking)
-        ? prev.filter((s) => s !== seeking)
-        : [...prev, seeking]
-    );
-  }
-
-  function toggleSave(id: string) {
-    setSavedIds((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
-  }
-
-  const filtered = mockOpportunities.filter((o) => {
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return (
-        o.title.toLowerCase().includes(q) ||
-        o.sector.some((s) => s.toLowerCase().includes(q)) ||
-        o.location.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
-
-  const mainExploreContent = (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "220px 1fr",
-        gap: 28,
-        alignItems: "start",
-      }}
-    >
-      {/* ============================
-          LEFT: FILTER SIDEBAR
-          ============================ */}
-      <aside>
-        {/* Filter Header */}
+  const hubContent = (
+    <div style={{ maxWidth: 1100, margin: "0 auto", width: "100%" }}>
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div
           style={{
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 20,
+            gap: 8,
+            background: "linear-gradient(135deg, #f5f3ff, #eff6ff)",
+            border: "1px solid #e9d5ff",
+            borderRadius: 999,
+            padding: "6px 16px",
+            marginBottom: 16,
           }}
         >
-          <span
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 14,
-              fontWeight: 700,
-              color: "#111827",
-            }}
-          >
-            <Filter size={16} />
-            Filter
+          <Sparkles size={14} color="#7c3aed" />
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#7c3aed" }}>
+            Ekosistem Bisnis Indonesia
           </span>
-          <button
-            style={{
-              fontSize: 12,
-              color: "#2563eb",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontWeight: 500,
-            }}
-            onClick={() => {
-              setSelectedSectors([]);
-              setSelectedStages([]);
-              setSelectedSeeking([]);
-            }}
-          >
-            Reset
-          </button>
         </div>
-
-        {/* Sektor */}
-        <div style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#6b7280",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 10,
-            }}
-          >
-            SEKTOR
-          </div>
-          {SECTORS.map((sector) => (
-            <label
-              key={sector}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "5px 0",
-                cursor: "pointer",
-                fontSize: 13,
-                color: selectedSectors.includes(sector) ? "#2563eb" : "#374151",
-                fontWeight: selectedSectors.includes(sector) ? 600 : 400,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedSectors.includes(sector)}
-                onChange={() => toggleSector(sector)}
-                style={{ accentColor: "#2563eb", width: 14, height: 14 }}
-              />
-              {sector}
-            </label>
-          ))}
-        </div>
-
-        {/* Lokasi */}
-        <div style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#6b7280",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 10,
-            }}
-          >
-            LOKASI
-          </div>
-          <select
-            style={{
-              width: "100%",
-              padding: "7px 10px",
-              border: "1px solid #e5e7eb",
-              borderRadius: 8,
-              fontSize: 13,
-              color: "#374151",
-              background: "#fff",
-              cursor: "pointer",
-              outline: "none",
-            }}
-          >
-            <option>Semua Lokasi</option>
-            <option>Yogyakarta</option>
-            <option>Jakarta</option>
-            <option>Bandung</option>
-            <option>Surabaya</option>
-          </select>
-        </div>
-
-        {/* Tahap Bisnis */}
-        <div style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#6b7280",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 10,
-            }}
-          >
-            TAHAP BISNIS
-          </div>
-          {STAGES.map((stage) => (
-            <label
-              key={stage.value}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "5px 0",
-                cursor: "pointer",
-                fontSize: 13,
-                color: selectedStages.includes(stage.label)
-                  ? "#2563eb"
-                  : "#374151",
-                fontWeight: selectedStages.includes(stage.label) ? 600 : 400,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedStages.includes(stage.label)}
-                onChange={() => toggleStage(stage.label)}
-                style={{ accentColor: "#2563eb", width: 14, height: 14 }}
-              />
-              {stage.label}
-            </label>
-          ))}
-        </div>
-
-        {/* Target Modal */}
-        <div style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#6b7280",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 10,
-            }}
-          >
-            TARGET MODAL
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="text"
-              placeholder="Min"
-              style={{
-                flex: 1,
-                padding: "7px 10px",
-                border: "1px solid #e5e7eb",
-                borderRadius: 8,
-                fontSize: 12,
-                color: "#374151",
-                outline: "none",
-              }}
-            />
-            <span style={{ color: "#9ca3af", fontSize: 12 }}>—</span>
-            <input
-              type="text"
-              placeholder="Max"
-              style={{
-                flex: 1,
-                padding: "7px 10px",
-                border: "1px solid #e5e7eb",
-                borderRadius: 8,
-                fontSize: 12,
-                color: "#374151",
-                outline: "none",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Mencari */}
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#6b7280",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 10,
-            }}
-          >
-            MENCARI
-          </div>
-          {SEEKING.map((s) => (
-            <label
-              key={s.value}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "5px 0",
-                cursor: "pointer",
-                fontSize: 13,
-                color: selectedSeeking.includes(s.label) ? "#2563eb" : "#374151",
-                fontWeight: selectedSeeking.includes(s.label) ? 600 : 400,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedSeeking.includes(s.label)}
-                onChange={() => toggleSeeking(s.label)}
-                style={{ accentColor: "#2563eb", width: 14, height: 14 }}
-              />
-              {s.label}
-            </label>
-          ))}
-        </div>
-      </aside>
-
-      {/* ============================
-          RIGHT: RESULTS
-          ============================ */}
-      <div>
-        {/* Page Title */}
-        <h1
-          style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: "#111827",
-            marginBottom: 4,
-          }}
-        >
-          Temukan Peluang Bisnis
+        <h1 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", marginBottom: 12, lineHeight: 1.2 }}>
+          Temukan Peluang<br />
+          <span style={{ background: "linear-gradient(135deg, #7c3aed, #2563eb)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            yang Tepat untuk Anda
+          </span>
         </h1>
-        <p style={{ fontSize: 14, color: "#6b7280", marginBottom: 24 }}>
-          Eksplorasi ribuan ide brilian dan startup tahap awal dari seluruh
-          Indonesia. Temukan partner atau investasi yang tepat untuk visi Anda.
+        <p style={{ fontSize: 15, color: "#64748b", maxWidth: 540, margin: "0 auto", lineHeight: 1.6 }}>
+          Pilih kategori yang Anda cari — ide bisnis inovatif dari founder,
+          atau properti &amp; aset modal dari capex provider.
         </p>
+      </div>
 
-        {/* Search + AI Button */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+      {/* Two Category Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 48 }}>
+        {/* Ide Bisnis */}
+        <Link href="/explore/ideas" style={{ textDecoration: "none" }}>
           <div
             style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "10px 16px",
               background: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+              border: "2px solid #e9d5ff",
+              borderRadius: 24,
+              padding: "36px 32px",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.border = "2px solid #7c3aed";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 20px 60px rgba(124,58,237,0.12)";
+              (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.border = "2px solid #e9d5ff";
+              (e.currentTarget as HTMLElement).style.boxShadow = "none";
+              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
             }}
           >
-            <Search size={17} color="#9ca3af" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari ide, sektor, kota, atau kebutuhan modal..."
-              style={{
-                flex: 1,
-                border: "none",
-                outline: "none",
-                fontSize: 14,
-                color: "#111827",
-                background: "transparent",
-              }}
-            />
+            <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, background: "linear-gradient(135deg, #7c3aed, #2563eb)", borderRadius: "50%", opacity: 0.06 }} />
+
+            <div style={{ width: 56, height: 56, background: "linear-gradient(135deg, #7c3aed, #2563eb)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+              <Lightbulb size={28} color="#fff" />
+            </div>
+
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>
+              Ide Bisnis
+            </h2>
+            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
+              Temukan startup dan ide bisnis inovatif dari founder berbakat Indonesia.
+              Investasi, co-found, atau jadilah mentor untuk bisnis berikutnya.
+            </p>
+
+            {/* Mini stats */}
+            <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+              {[
+                { icon: <TrendingUp size={14} color="#7c3aed" />, label: `${mockOpportunities.length} listing aktif` },
+                { icon: <Sparkles size={14} color="#7c3aed" />, label: `${verifiedIdeas.length} terverifikasi` },
+                { icon: <Users size={14} color="#7c3aed" />, label: "Investor & Co-Founder" },
+              ].map((s) => (
+                <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  {s.icon}
+                  <span style={{ fontSize: 12, color: "#6b7280" }}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Sector pills */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>
+              {["EdTech", "FinTech", "AgriTech", "HealthTech", "F&B", "Marketplace"].map((s) => (
+                <span key={s} style={{ fontSize: 11, padding: "3px 10px", background: "#f5f3ff", color: "#7c3aed", borderRadius: 999, fontWeight: 600 }}>{s}</span>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#7c3aed", fontWeight: 700, fontSize: 14 }}>
+              Jelajahi Ide Bisnis <ArrowRight size={16} />
+            </div>
           </div>
-          <button
+        </Link>
+
+        {/* Capex */}
+        <Link href="/explore/capex" style={{ textDecoration: "none" }}>
+          <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
+              background: "#fff",
+              border: "2px solid #bfdbfe",
+              borderRadius: 24,
+              padding: "36px 32px",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.border = "2px solid #2563eb";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 20px 60px rgba(37,99,235,0.12)";
+              (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.border = "2px solid #bfdbfe";
+              (e.currentTarget as HTMLElement).style.boxShadow = "none";
+              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+            }}
+          >
+            <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, background: "linear-gradient(135deg, #2563eb, #0891b2)", borderRadius: "50%", opacity: 0.06 }} />
+
+            <div style={{ width: 56, height: 56, background: "linear-gradient(135deg, #2563eb, #0891b2)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+              <Building2 size={28} color="#fff" />
+            </div>
+
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>
+              Capex &amp; Properti
+            </h2>
+            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
+              Temukan tanah, bangunan, ruko, gudang, dan aset properti yang tersedia
+              untuk disewa, dibeli, atau diinvestasikan bersama.
+            </p>
+
+            <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+              {[
+                { icon: <Building2 size={14} color="#2563eb" />, label: `${mockCapexListings.length} listing aktif` },
+                { icon: <Sparkles size={14} color="#2563eb" />, label: `${verifiedCapex.length} terverifikasi` },
+                { icon: <MapPin size={14} color="#2563eb" />, label: "Seluruh Indonesia" },
+              ].map((s) => (
+                <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  {s.icon}
+                  <span style={{ fontSize: 12, color: "#6b7280" }}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>
+              {["Ruko", "Lahan", "Gudang", "Kantor", "Bangunan", "Mixed-Use"].map((s) => (
+                <span key={s} style={{ fontSize: 11, padding: "3px 10px", background: "#eff6ff", color: "#2563eb", borderRadius: 999, fontWeight: 600 }}>{s}</span>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#2563eb", fontWeight: 700, fontSize: 14 }}>
+              Jelajahi Capex &amp; Properti <ArrowRight size={16} />
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      {/* Featured Ads Banner */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
+          borderRadius: 20,
+          padding: "28px 36px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 20,
+        }}
+      >
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <Sparkles size={16} color="#a78bfa" />
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Fitur Ads — Boost Listing Anda
+            </span>
+          </div>
+          <h3 style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
+            Tampilkan Listing Anda di Posisi Teratas
+          </h3>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+            Jangkau lebih banyak investor dan calon partner. Mulai dari Rp 99.000 untuk 3 hari boost.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+          <Link
+            href="/explore/ideas"
+            style={{
               padding: "10px 20px",
-              background: "#2563eb",
+              background: "linear-gradient(135deg, #7c3aed, #2563eb)",
               color: "#fff",
-              border: "none",
               borderRadius: 10,
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
+              fontSize: 13,
+              fontWeight: 700,
+              textDecoration: "none",
             }}
           >
-            <Sparkles size={16} />
-            Cari dengan AI
-          </button>
-        </div>
-
-        {/* Results Count + Sort */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 20,
-          }}
-        >
-          <span style={{ fontSize: 14, color: "#6b7280" }}>
-            Menampilkan{" "}
-            <strong style={{ color: "#111827" }}>{filtered.length * 41}</strong>{" "}
-            peluang bisnis
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>Urutkan:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                padding: "6px 32px 6px 10px",
-                border: "1px solid #e5e7eb",
-                borderRadius: 8,
-                fontSize: 13,
-                color: "#374151",
-                background: "#fff",
-                cursor: "pointer",
-                outline: "none",
-                appearance: "auto",
-              }}
-            >
-              <option>Direkomendasikan AI</option>
-              <option>Terbaru</option>
-              <option>Target Modal Tertinggi</option>
-              <option>Match Terbaik</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Cards Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 16,
-            marginBottom: 32,
-          }}
-        >
-          {filtered.map((opp) => (
-            <OpportunityCard
-              key={opp.id}
-              opportunity={opp}
-              onSave={toggleSave}
-              isSaved={savedIds.includes(opp.id)}
-            />
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-          }}
-        >
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            Boost Ide Bisnis
+          </Link>
+          <Link
+            href="/explore/capex"
             style={{
-              width: 34,
-              height: 34,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid #e5e7eb",
-              borderRadius: 8,
-              background: "#fff",
-              cursor: "pointer",
+              padding: "10px 20px",
+              background: "rgba(255,255,255,0.1)",
+              color: "#fff",
+              borderRadius: 10,
+              fontSize: 13,
+              fontWeight: 700,
+              textDecoration: "none",
+              border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
-            <ChevronLeft size={16} color="#6b7280" />
-          </button>
-          {[1, 2, 3].map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              style={{
-                width: 34,
-                height: 34,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: `1px solid ${currentPage === page ? "#2563eb" : "#e5e7eb"}`,
-                borderRadius: 8,
-                background: currentPage === page ? "#2563eb" : "#fff",
-                color: currentPage === page ? "#fff" : "#374151",
-                fontSize: 13,
-                fontWeight: currentPage === page ? 700 : 400,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage((p) => p + 1)}
-            style={{
-              width: 34,
-              height: 34,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid #e5e7eb",
-              borderRadius: 8,
-              background: "#fff",
-              cursor: "pointer",
-            }}
-          >
-            <ChevronRight size={16} color="#6b7280" />
-          </button>
+            Boost Capex
+          </Link>
         </div>
       </div>
     </div>
   );
 
-  // If user is logged in, show explore inside the authenticated Dashboard layout
+  // If user is logged in, show inside Dashboard layout (DashboardSidebar on left, no duplicate top navbar)
   if (isLoggedIn) {
     return (
       <div className="dashboard-layout">
         <DashboardSidebar />
-        <main className="dashboard-content">{mainExploreContent}</main>
+        <main className="dashboard-content" style={{ padding: "36px 40px" }}>
+          {hubContent}
+        </main>
       </div>
     );
   }
 
-  // If user is not logged in (guest visitor), show public navbar and footer
+  // If user is guest, show public layout with TopNavBar and Footer
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        background: "#f8f9fa",
-      }}
-    >
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f8fafc" }}>
       <TopNavBar />
-      <div
-        style={{
-          flex: 1,
-          maxWidth: 1280,
-          margin: "0 auto",
-          width: "100%",
-          padding: "32px 24px",
-        }}
-      >
-        {mainExploreContent}
-      </div>
+      <main style={{ flex: 1, padding: "48px 24px" }}>
+        {hubContent}
+      </main>
       <Footer />
     </div>
   );

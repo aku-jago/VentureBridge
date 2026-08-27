@@ -4,6 +4,13 @@ import type {
   InvestorProfile,
   AccessRequest,
   Match,
+  TokenPackage,
+  TokenTransaction,
+  TopUpRequest,
+  WithdrawRequest,
+  AdsPackage,
+  AdsRequest,
+  CapexListing,
 } from "@/types";
 
 // ===========================
@@ -369,5 +376,344 @@ export const mockMatches: Match[] = [
     status: "pending",
     matchType: "investor",
     createdAt: "2024-11-09",
+  },
+];
+
+// ===========================
+// Token Packages
+// ===========================
+export const TOKEN_PACKAGES: TokenPackage[] = [
+  {
+    id: "pkg-starter",
+    name: "Starter",
+    price: 50000,
+    tokens: 20,
+  },
+  {
+    id: "pkg-basic",
+    name: "Basic",
+    price: 100000,
+    tokens: 50,
+    isPopular: true,
+  },
+  {
+    id: "pkg-pro",
+    name: "Pro",
+    price: 200000,
+    tokens: 110,
+  },
+  {
+    id: "pkg-premium",
+    name: "Premium",
+    price: 500000,
+    tokens: 300,
+  },
+];
+
+// Biaya token untuk unlock 1 ide bisnis
+export const TOKEN_UNLOCK_COST = 20;
+
+// Nilai rupiah per token (untuk estimasi withdraw founder)
+export const TOKEN_RUPIAH_VALUE = 2000; // Rp 2.000 per token
+
+// ===========================
+// Mock Token Transactions (Investor user-2)
+// ===========================
+export const mockInvestorTransactions: TokenTransaction[] = [
+  {
+    id: "txn-1",
+    userId: "user-2",
+    type: "topup",
+    amount: 50,
+    description: "Top Up Paket Basic",
+    createdAt: "2024-11-01T10:00:00",
+    status: "completed",
+  },
+  {
+    id: "txn-2",
+    userId: "user-2",
+    type: "unlock",
+    amount: -20,
+    description: "Akses Detail Bisnis",
+    relatedOpportunityId: "opp-1",
+    relatedOpportunityTitle: "EDUKITA",
+    relatedUserId: "user-1",
+    relatedUserName: "Dzakki N.",
+    createdAt: "2024-11-05T14:30:00",
+    status: "completed",
+  },
+  {
+    id: "txn-3",
+    userId: "user-2",
+    type: "topup",
+    amount: 110,
+    description: "Top Up Paket Pro",
+    createdAt: "2024-11-08T09:15:00",
+    status: "completed",
+  },
+  {
+    id: "txn-4",
+    userId: "user-2",
+    type: "unlock",
+    amount: -20,
+    description: "Akses Detail Bisnis",
+    relatedOpportunityId: "opp-4",
+    relatedOpportunityTitle: "FITSPACE",
+    relatedUserId: "user-2",
+    relatedUserName: "Budi S.",
+    createdAt: "2024-11-09T16:00:00",
+    status: "completed",
+  },
+];
+
+// ===========================
+// Mock Token Transactions (Founder user-1)
+// ===========================
+export const mockFounderTransactions: TokenTransaction[] = [
+  {
+    id: "ftxn-1",
+    userId: "user-1",
+    type: "receive",
+    amount: 20,
+    description: "Token diterima dari akses investor",
+    relatedOpportunityId: "opp-1",
+    relatedOpportunityTitle: "EDUKITA",
+    relatedUserId: "user-2",
+    relatedUserName: "Budi Santoso",
+    createdAt: "2024-11-05T14:30:00",
+    status: "completed",
+  },
+  {
+    id: "ftxn-2",
+    userId: "user-1",
+    type: "receive",
+    amount: 20,
+    description: "Token diterima dari akses investor",
+    relatedOpportunityId: "opp-1",
+    relatedOpportunityTitle: "EDUKITA",
+    relatedUserId: "user-4",
+    relatedUserName: "Andi Wijaya",
+    createdAt: "2024-11-07T11:20:00",
+    status: "completed",
+  },
+  {
+    id: "ftxn-3",
+    userId: "user-1",
+    type: "withdraw",
+    amount: -20,
+    description: "Withdraw token ke rekening",
+    createdAt: "2024-11-10T08:00:00",
+    status: "completed",
+  },
+];
+
+// ===========================
+// Mock Top-Up Requests (untuk Admin)
+// ===========================
+export const mockTopUpRequests: TopUpRequest[] = [
+  {
+    id: "topup-1",
+    userId: "user-4",
+    userName: "Andi Wijaya",
+    userInitials: "AW",
+    packageId: "pkg-basic",
+    packageName: "Basic",
+    amount: 100000,
+    tokens: 50,
+    status: "waiting",
+    requestedAt: "2024-11-12T13:45:00",
+  },
+  {
+    id: "topup-2",
+    userId: "user-2",
+    userName: "Budi Santoso",
+    userInitials: "BS",
+    packageId: "pkg-pro",
+    packageName: "Pro",
+    amount: 200000,
+    tokens: 110,
+    status: "confirmed",
+    requestedAt: "2024-11-08T09:00:00",
+    confirmedAt: "2024-11-08T09:15:00",
+  },
+];
+
+// ===========================
+// Mock Withdraw Requests (untuk Admin)
+// ===========================
+export const mockWithdrawRequests: WithdrawRequest[] = [
+  {
+    id: "wd-1",
+    founderId: "user-1",
+    founderName: "Dzakki Naufal",
+    founderInitials: "DN",
+    tokens: 20,
+    estimatedRupiah: 40000,
+    bankName: "BCA",
+    accountNumber: "1234567890",
+    accountName: "Dzakki Naufal",
+    status: "processed",
+    requestedAt: "2024-11-10T08:00:00",
+    processedAt: "2024-11-10T10:30:00",
+  },
+];
+
+// ===========================
+// Mock Ads Packages
+// ===========================
+export const mockAdsPackages: AdsPackage[] = [
+  {
+    id: "ads-1",
+    name: "Starter Boost",
+    price: 99000,
+    durationDays: 3,
+    features: ["Tampil di posisi teratas 3 hari", "Label Sponsored", "Notifikasi ke 50+ investor"],
+  },
+  {
+    id: "ads-2",
+    name: "Pro Boost",
+    price: 249000,
+    durationDays: 7,
+    label: "Terlaris",
+    features: ["Tampil di posisi teratas 7 hari", "Label Sponsored", "Notifikasi ke 200+ investor", "Highlight warna khusus"],
+  },
+  {
+    id: "ads-3",
+    name: "Premium Boost",
+    price: 499000,
+    durationDays: 30,
+    features: ["Tampil di posisi teratas 30 hari", "Label Sponsored", "Notifikasi ke semua investor", "Highlight + badge Premium", "Laporan performa iklan"],
+  },
+];
+
+// ===========================
+// Mock Ads Requests
+// ===========================
+export const mockAdsRequests: AdsRequest[] = [
+  {
+    id: "ads-req-1",
+    userId: "user-1",
+    userName: "Dzakki Naufal",
+    userInitials: "DN",
+    listingId: "opp-1",
+    listingTitle: "EDUKITA",
+    listingType: "idea",
+    packageId: "ads-2",
+    packageName: "Pro Boost",
+    amount: 249000,
+    durationDays: 7,
+    status: "active",
+    requestedAt: "2024-11-01T09:00:00",
+    activatedAt: "2024-11-01T14:00:00",
+    expiresAt: "2024-11-08T14:00:00",
+  },
+  {
+    id: "ads-req-2",
+    userId: "user-3",
+    userName: "Andi Wijaya",
+    userInitials: "AW",
+    listingId: "opp-2",
+    listingTitle: "PANENLOKAL",
+    listingType: "idea",
+    packageId: "ads-1",
+    packageName: "Starter Boost",
+    amount: 99000,
+    durationDays: 3,
+    status: "waiting",
+    paymentProofNote: "Sudah transfer via BCA Mobile jam 10:15",
+    requestedAt: "2024-11-12T10:00:00",
+  },
+];
+
+// ===========================
+// Mock Capex Listings
+// ===========================
+export const mockCapexListings: CapexListing[] = [
+  {
+    id: "capex-1",
+    title: "Ruko Strategis 2 Lantai — Jalan Malioboro",
+    shortDescription: "Ruko 2 lantai siap pakai di jantung kota Yogyakarta, cocok untuk bisnis retail, kafe, atau kantor.",
+    description: "Ruko 2 lantai berlokasi strategis di Jalan Malioboro, Yogyakarta. Akses mudah ke transportasi umum, parkir luas, dan sekitar pusat perbelanjaan. Bangunan kondisi baik, sudah renovasi 2023. Cocok untuk bisnis retail, kafe, restoran, atau startup kantor. SHM atas nama pemilik, siap proses.",
+    ownerId: "user-4",
+    owner: { id: "user-4", name: "Budi S.", initials: "BS" },
+    propertyType: "ruko",
+    capexType: "rent",
+    price: 15000000,
+    location: "Yogyakarta",
+    area: 120,
+    sector: ["F&B", "Retail", "Kantor"],
+    verificationStatus: "verified",
+    facilities: ["Listrik 2200W", "Air PDAM", "WiFi siap", "Parkir", "AC"],
+    createdAt: "2024-10-05",
+    isAds: true,
+    adsExpiresAt: "2024-11-15",
+  },
+  {
+    id: "capex-2",
+    title: "Lahan 500m² Siap Bangun — Bandung Utara",
+    shortDescription: "Lahan kosong 500m² lokasi premium Bandung Utara, sertifikat SHM, cocok untuk vila atau kafe.",
+    description: "Lahan kosong seluas 500m² di Bandung Utara, area Lembang. Pemandangan gunung, udara segar. IMB tersedia untuk vila/resort/kafe. Dekat wisata Tangkuban Perahu. Cocok untuk investasi properti atau bisnis hospitality.",
+    ownerId: "user-5",
+    owner: { id: "user-5", name: "Siti R.", initials: "SR" },
+    propertyType: "land",
+    capexType: "sell",
+    price: 2500000000,
+    location: "Bandung",
+    area: 500,
+    sector: ["Hospitality", "F&B", "Tourism"],
+    verificationStatus: "verified",
+    facilities: ["SHM", "IMB", "Akses jalan aspal", "PLN tersedia"],
+    createdAt: "2024-09-20",
+  },
+  {
+    id: "capex-3",
+    title: "Gudang Industrial 800m² — Kawasan MM2100 Bekasi",
+    shortDescription: "Gudang siap pakai di kawasan industri MM2100 Bekasi, akses tol terjangkau, cocok logistik/manufaktur.",
+    description: "Gudang industrial seluas 800m² berlokasi di Kawasan Industri MM2100 Bekasi. Dilengkapi loading dock, tinggi plafon 8m, kapasitas listrik 33KVA. Cocok untuk perusahaan logistik, e-commerce fulfillment, atau manufaktur ringan.",
+    ownerId: "user-4",
+    owner: { id: "user-4", name: "Budi S.", initials: "BS" },
+    propertyType: "warehouse",
+    capexType: "rent",
+    price: 45000000,
+    location: "Jakarta",
+    area: 800,
+    sector: ["Logistik", "E-Commerce", "Manufaktur"],
+    verificationStatus: "verified",
+    facilities: ["Loading Dock", "Listrik 33KVA", "Plafon 8m", "CCTV", "Satpam 24 jam"],
+    createdAt: "2024-10-15",
+  },
+  {
+    id: "capex-4",
+    title: "Kantor Coworking Space Siap Pakai — Jakarta Selatan",
+    shortDescription: "Ruang kantor lantai 12, view Jakarta, siap pakai untuk startup 10-50 orang.",
+    description: "Ruang kantor modern lantai 12 di gedung premium Jakarta Selatan. Sudah dilengkapi furnitur, meeting room, pantry, dan internet dedicated 100Mbps. Ideal untuk startup tech yang membutuhkan kantor profesional tanpa investasi besar.",
+    ownerId: "user-5",
+    owner: { id: "user-5", name: "Siti R.", initials: "SR" },
+    propertyType: "office",
+    capexType: "rent",
+    price: 25000000,
+    location: "Jakarta",
+    area: 200,
+    sector: ["Tech", "Startup", "Konsultan"],
+    verificationStatus: "pending",
+    facilities: ["Internet 100Mbps", "AC", "Meeting Room", "Pantry", "Resepsionis"],
+    createdAt: "2024-11-01",
+  },
+  {
+    id: "capex-5",
+    title: "Ruko Jalan Braga Bandung — Investasi Properti",
+    shortDescription: "Ruko heritage 3 lantai di Jalan Braga Bandung, ROI tinggi untuk sewa jangka pendek.",
+    description: "Ruko heritage bergaya art deco di Jalan Braga Bandung. 3 lantai, total 300m². Kawasan wisata & kuliner favorit. Rental yield estimasi 8-10%/tahun. Ideal untuk investor properti atau bisnis hospitality.",
+    ownerId: "user-3",
+    owner: { id: "user-3", name: "Andi W.", initials: "AW" },
+    propertyType: "ruko",
+    capexType: "invest",
+    price: 5500000000,
+    location: "Bandung",
+    area: 300,
+    sector: ["Hospitality", "F&B", "Retail"],
+    verificationStatus: "unverified",
+    facilities: ["SHM", "3 Lantai", "Parkir", "Heritage Building"],
+    createdAt: "2024-11-05",
   },
 ];

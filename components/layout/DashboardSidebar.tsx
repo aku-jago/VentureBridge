@@ -11,16 +11,19 @@ import {
   Compass,
   Rss,
   Bot,
-  Bookmark,
-  Calendar,
   User,
-  Settings,
   HelpCircle,
   LogOut,
   Rocket,
   Plus,
+  PenSquare,
+  Coins,
+  Inbox,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToken } from "@/contexts/TokenContext";
+import { useOffer } from "@/contexts/OfferContext";
+import { useChat } from "@/contexts/ChatContext";
 
 interface SidebarLink {
   href: string;
@@ -44,8 +47,11 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { investorBalance, founderBalance } = useToken();
+  const { pendingOffersCount } = useOffer();
+  const { totalUnreadCount } = useChat();
 
-  const role = user?.role || propRole || "founder";
+  const role = propRole || user?.role || "founder";
   const name = user?.name || propName || "Idea Founder";
   const title = user?.title || propTitle || (role === "investor" ? "Investor / Modal" : "Idea Founder");
   const initials =
@@ -59,41 +65,52 @@ export function DashboardSidebar({
       .toUpperCase() ||
     "IF";
 
+  const isInvestor = role === "investor";
+
+  // Investor-specific navigation
+  const investorLinks: SidebarLink[] = [
+    { href: "/investor/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+    { href: "/investor/offers", label: "Tawaran Masuk", icon: <Inbox size={18} />, badge: pendingOffersCount },
+    { href: "/explore", label: "Explore Peluang", icon: <Compass size={18} /> },
+    { href: "/dashboard/matches", label: "Matches AI", icon: <Handshake size={18} /> },
+    { href: "/feed", label: "Feed Komunitas", icon: <Rss size={18} /> },
+    { href: "/dashboard/messages", label: "Messages", icon: <MessageSquare size={18} />, badge: totalUnreadCount },
+    { href: "/dashboard/ai-copilot", label: "AI Copilot", icon: <Bot size={18} /> },
+    {
+      href: "/investor/tokens",
+      label: `Token Wallet (${investorBalance})`,
+      icon: <Coins size={18} />,
+    },
+  ];
+
+  // Founder & Capex navigation
   const founderLinks: SidebarLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { href: "/dashboard/listings", label: "My Listings", icon: <ListChecks size={18} /> },
     { href: "/dashboard/access-requests", label: "Access Requests", icon: <FileText size={18} />, badge: 5 },
-    { href: "/dashboard/matches", label: "Matches", icon: <Handshake size={18} /> },
     { href: "/explore", label: "Explore", icon: <Compass size={18} /> },
-    { href: "/feed", label: "Feed", icon: <Rss size={18} /> },
-    { href: "/dashboard/messages", label: "Messages", icon: <MessageSquare size={18} />, badge: 2 },
+    { href: "/dashboard/matches", label: "Matches AI", icon: <Handshake size={18} /> },
+    { href: "/feed", label: "Feed Komunitas", icon: <Rss size={18} /> },
+    { href: "/dashboard/messages", label: "Messages", icon: <MessageSquare size={18} />, badge: totalUnreadCount },
     { href: "/dashboard/ai-copilot", label: "AI Copilot", icon: <Bot size={18} /> },
     { href: "/dashboard/verification", label: "Verifikasi Bisnis", icon: <FileText size={18} /> },
+    {
+      href: "/founder/tokens",
+      label: `Token Wallet (${founderBalance || investorBalance})`,
+      icon: <Coins size={18} />,
+    },
   ];
 
-  const investorLinks: SidebarLink[] = [
-    { href: "/investor/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
-    { href: "/explore", label: "Explore", icon: <Compass size={18} /> },
-    { href: "/feed", label: "Feed", icon: <Rss size={18} /> },
-    { href: "/dashboard/matches", label: "Matches", icon: <Handshake size={18} /> },
-    { href: "/saved", label: "Saved", icon: <Bookmark size={18} /> },
-    { href: "/dashboard/messages", label: "Messages", icon: <MessageSquare size={18} /> },
-    { href: "/meetings", label: "Meetings", icon: <Calendar size={18} /> },
-    { href: "/dashboard/ai-copilot", label: "AI Copilot", icon: <Bot size={18} /> },
-  ];
-
-  const links = role === "founder" ? founderLinks : investorLinks;
-  const ctaHref = role === "founder" ? "/dashboard/listings/new" : "/explore";
-  const ctaLabel = role === "founder" ? "Buat Listing Baru" : "+ New Listing";
+  const links = isInvestor ? investorLinks : founderLinks;
+  const ctaHref = isInvestor ? "/explore" : "/dashboard/listings/new";
+  const ctaLabel = isInvestor ? "🔍 Eksplorasi Peluang" : "Buat Listing Baru";
 
   const bottomLinks: SidebarLink[] = [
     { href: "/help", label: "Help Center", icon: <HelpCircle size={18} /> },
   ];
 
-  const profileLinks: SidebarLink[] = [
-    { href: "/profile", label: "Profile", icon: <User size={18} /> },
-    { href: "/settings", label: "Settings", icon: <Settings size={18} /> },
-  ];
+  const profileLink = { href: `/profile/${user?.id || "me"}`, label: "Profil Saya", icon: <User size={18} /> };
+  const editProfileLink = { href: "/profile/edit", label: "Edit Profil", icon: <PenSquare size={18} /> };
 
   function isActive(href: string): boolean {
     if (href === "/dashboard" || href === "/investor/dashboard") {
@@ -148,14 +165,17 @@ export function DashboardSidebar({
           </span>
         </Link>
 
-        {/* User Info */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {/* User Info — clickable to own profile */}
+        <Link
+          href={`/profile/${user?.id || "me"}`}
+          style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}
+        >
           <div
             style={{
               width: 36,
               height: 36,
               borderRadius: "50%",
-              background: role === "investor" ? "#16a34a" : "#2563eb",
+              background: user?.avatarColor || (role === "investor" ? "#16a34a" : "#2563eb"),
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -173,7 +193,7 @@ export function DashboardSidebar({
             </div>
             <div style={{ fontSize: 11, color: "#9ca3af" }}>{title}</div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* CTA Button */}
@@ -257,29 +277,28 @@ export function DashboardSidebar({
           }}
         />
 
-        {/* Profile & Settings — only for investor role */}
-        {role === "investor" &&
-          profileLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 10px",
-                borderRadius: 8,
-                marginBottom: 2,
-                fontSize: 13,
-                color: isActive(link.href) ? "#fff" : "#d1d5db",
-                background: isActive(link.href) ? "#1f2937" : "transparent",
-                textDecoration: "none",
-              }}
-            >
-              {link.icon}
-              {link.label}
-            </Link>
-          ))}
+        {/* Profile & Settings — for ALL users */}
+        {[profileLink, editProfileLink].map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "8px 10px",
+              borderRadius: 8,
+              marginBottom: 2,
+              fontSize: 13,
+              color: isActive(link.href) ? "#fff" : "#d1d5db",
+              background: isActive(link.href) ? "#1f2937" : "transparent",
+              textDecoration: "none",
+            }}
+          >
+            {link.icon}
+            {link.label}
+          </Link>
+        ))}
 
         {bottomLinks.map((link) => (
           <Link
