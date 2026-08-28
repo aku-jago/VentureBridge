@@ -9,6 +9,7 @@ import {
   useCallback,
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import {
   TokenTransaction,
   TopUpRequest,
@@ -98,7 +99,7 @@ function saveToStorage<T>(key: string, value: T) {
 }
 
 export function TokenProvider({ children }: { children: ReactNode }) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, updateUserAccount, accounts } = useAuth();
 
   const [investorTransactions, setInvestorTransactions] = useState<TokenTransaction[]>([]);
   const [unlockedOpportunities, setUnlockedOpportunities] = useState<string[]>([]);
@@ -124,6 +125,30 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     const wd = storedWithdraws.length > 0 ? storedWithdraws : mockWithdrawRequests;
     setAllWithdrawRequests(wd);
     setWithdrawRequests(wd);
+
+    // Optional: Sync from Supabase
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("topup_requests").select("*").then(({ data, error }) => {
+        if (data && !error && data.length > 0) {
+          const remote: TopUpRequest[] = data.map((r: any) => ({
+            id: r.id,
+            userId: r.user_id,
+            userName: r.user_name,
+            userInitials: r.user_initials,
+            packageId: r.package_id,
+            packageName: r.package_name,
+            amount: Number(r.amount),
+            tokens: Number(r.tokens),
+            status: r.status,
+            paymentProofNote: r.payment_proof_note,
+            requestedAt: r.requested_at,
+            confirmedAt: r.confirmed_at,
+          }));
+          setAllTopUpRequests(remote);
+          saveToStorage("vb_topup_requests", remote);
+        }
+      });
+    }
   }, []);
 
   const investorBalance = user?.tokenBalance ?? 120;
@@ -148,9 +173,25 @@ export function TokenProvider({ children }: { children: ReactNode }) {
         paymentProofNote: note,
         requestedAt: new Date().toISOString(),
       };
-      const updated = [...allTopUpRequests, newRequest];
+      const updated = [newRequest, ...allTopUpRequests];
       setAllTopUpRequests(updated);
       saveToStorage("vb_topup_requests", updated);
+
+      if (isSupabaseConfigured && supabase) {
+        supabase.from("topup_requests").insert({
+          id: newRequest.id,
+          user_id: newRequest.userId,
+          user_name: newRequest.userName,
+          user_initials: newRequest.userInitials,
+          package_id: newRequest.packageId,
+          package_name: newRequest.packageName,
+          amount: newRequest.amount,
+          tokens: newRequest.tokens,
+          status: "waiting",
+          payment_proof_note: note || "",
+          requested_at: newRequest.requestedAt,
+        }).then();
+      }
     },
     [user, allTopUpRequests]
   );
@@ -214,21 +255,50 @@ export function TokenProvider({ children }: { children: ReactNode }) {
       setFounderTransactions(updatedFndTxns);
       saveToStorage("vb_founder_transactions", updatedFndTxns);
 
-      const founderBalanceKey = `vb_founder_balance_${founderId}`;
-      const currentFounderBalance = loadFromStorage<number>(founderBalanceKey, 20);
-      saveToStorage(founderBalanceKey, currentFounderBalance + TOKEN_UNLOCK_COST);
+      const targetFounder = accounts.find((a) => a.id === founderId);
+      const currentFounderBalance = targetFounder?.founderTokenBalance ?? 20;
+      updateUserAccount(founderId, { founderTokenBalance: currentFounderBalance + TOKEN_UNLOCK_COST });
 
       const newUnlocked = [...unlockedOpportunities, opportunityId];
       setUnlockedOpportunities(newUnlocked);
       saveToStorage("vb_unlocked_opportunities", newUnlocked);
       updateProfile({ unlockedOpportunities: newUnlocked });
 
+      if (isSupabaseConfigured && supabase) {
+        supabase.from("token_transactions").insert([
+          {
+            id: investorTxn.id,
+            user_id: investorTxn.userId,
+            type: "unlock",
+            amount: investorTxn.amount,
+            description: investorTxn.description,
+            related_opportunity_id: opportunityId,
+            related_opportunity_title: opportunityTitle,
+            related_user_id: founderId,
+            related_user_name: founderName,
+            status: "completed",
+          },
+          {
+            id: founderTxn.id,
+            user_id: founderTxn.userId,
+            type: "receive",
+            amount: founderTxn.amount,
+            description: founderTxn.description,
+            related_opportunity_id: opportunityId,
+            related_opportunity_title: opportunityTitle,
+            related_user_id: user.id,
+            related_user_name: user.name,
+            status: "completed",
+          },
+        ]).then();
+      }
+
       return {
         success: true,
         message: `Berhasil! ${TOKEN_UNLOCK_COST} token digunakan. Saldo tersisa: ${newBalance} token.`,
       };
     },
-    [user, unlockedOpportunities, investorTransactions, founderTransactions, updateProfile]
+    [user, unlockedOpportunities, investorTransactions, founderTransactions, updateProfile, accounts, updateUserAccount]
   );
 
   const isOpportunityUnlocked = useCallback(
@@ -249,27 +319,28 @@ export function TokenProvider({ children }: { children: ReactNode }) {
 
       const currentFounderBalance = user.founderTokenBalance ?? founderBalance;
 
-      if (tokens <= 0) return { success: false, message: "Jumlah token tidak valid." };
-      if (tokens > currentFounderBalance) {
+      if (currentFounderBalance < tokens) {
         return {
           success: false,
-          message: `Saldo token tidak cukup. Saldo kamu: ${currentFounderBalance} token.`,
+          message: `Saldo token founder tidak cukup. Saldo kamu: ${currentFounderBalance} token.`,
         };
       }
 
-      const estimatedRupiah = tokens * TOKEN_RUPIAH_VALUE;
-      updateProfile({ founderTokenBalance: currentFounderBalance - tokens });
+      const newBalance = currentFounderBalance - tokens;
+      updateProfile({ founderTokenBalance: newBalance });
 
-      const withdrawTxn: TokenTransaction = {
+      const estimatedRupiah = tokens * TOKEN_RUPIAH_VALUE;
+
+      const fndTxn: TokenTransaction = {
         id: `ftxn-${Date.now()}`,
         userId: user.id ?? "unknown",
         type: "withdraw_pending",
         amount: -tokens,
-        description: `Permintaan withdraw ${tokens} token`,
+        description: `Penarikan Dana ke ${bankName} (${accountNumber})`,
         createdAt: new Date().toISOString(),
         status: "pending",
       };
-      const updatedFndTxns = [withdrawTxn, ...founderTransactions];
+      const updatedFndTxns = [fndTxn, ...founderTransactions];
       setFounderTransactions(updatedFndTxns);
       saveToStorage("vb_founder_transactions", updatedFndTxns);
 
@@ -291,6 +362,22 @@ export function TokenProvider({ children }: { children: ReactNode }) {
       setWithdrawRequests(updatedWithdraws);
       saveToStorage("vb_withdraw_requests", updatedWithdraws);
 
+      if (isSupabaseConfigured && supabase) {
+        supabase.from("withdraw_requests").insert({
+          id: newWithdraw.id,
+          founder_id: newWithdraw.founderId,
+          founder_name: newWithdraw.founderName,
+          founder_initials: newWithdraw.founderInitials,
+          tokens: newWithdraw.tokens,
+          estimated_rupiah: newWithdraw.estimatedRupiah,
+          bank_name: newWithdraw.bankName,
+          account_number: newWithdraw.accountNumber,
+          account_name: newWithdraw.accountName,
+          status: "pending",
+          requested_at: newWithdraw.requestedAt,
+        }).then();
+      }
+
       return {
         success: true,
         message: `Permintaan withdraw ${tokens} token (≈ Rp ${estimatedRupiah.toLocaleString("id-ID")}) berhasil dikirim.`,
@@ -304,9 +391,10 @@ export function TokenProvider({ children }: { children: ReactNode }) {
       const request = allTopUpRequests.find((r) => r.id === topUpId);
       if (!request || request.status !== "waiting") return;
 
+      const confirmedTime = new Date().toISOString();
       const updated = allTopUpRequests.map((r) =>
         r.id === topUpId
-          ? { ...r, status: "confirmed" as const, confirmedAt: new Date().toISOString() }
+          ? { ...r, status: "confirmed" as const, confirmedAt: confirmedTime }
           : r
       );
       setAllTopUpRequests(updated);
@@ -318,23 +406,40 @@ export function TokenProvider({ children }: { children: ReactNode }) {
         type: "topup",
         amount: request.tokens,
         description: `Top Up Paket ${request.packageName} — Dikonfirmasi`,
-        createdAt: new Date().toISOString(),
+        createdAt: confirmedTime,
         status: "completed",
       };
       const updatedInvTxns = [topupTxn, ...investorTransactions];
       setInvestorTransactions(updatedInvTxns);
       saveToStorage("vb_investor_transactions", updatedInvTxns);
 
+      // Directly update target user account balance
+      const targetUser = accounts.find((a) => a.id === request.userId);
+      const prevBal = targetUser?.tokenBalance ?? (request.userId === user?.id ? (user?.tokenBalance ?? 0) : 0);
+      const newBal = prevBal + request.tokens;
+
+      updateUserAccount(request.userId, { tokenBalance: newBal });
       if (user?.id === request.userId) {
-        const currentBalance = user.tokenBalance ?? 0;
-        updateProfile({ tokenBalance: currentBalance + request.tokens });
-      } else {
-        const balanceKey = `vb_investor_balance_${request.userId}`;
-        const currentBalance = loadFromStorage<number>(balanceKey, 0);
-        saveToStorage(balanceKey, currentBalance + request.tokens);
+        updateProfile({ tokenBalance: newBal });
+      }
+
+      if (isSupabaseConfigured && supabase) {
+        supabase.from("topup_requests").update({
+          status: "confirmed",
+          confirmed_at: confirmedTime,
+        }).eq("id", topUpId).then();
+
+        supabase.from("token_transactions").insert({
+          id: topupTxn.id,
+          user_id: request.userId,
+          type: "topup",
+          amount: request.tokens,
+          description: topupTxn.description,
+          status: "completed",
+        }).then();
       }
     },
-    [allTopUpRequests, investorTransactions, user, updateProfile]
+    [allTopUpRequests, investorTransactions, user, updateProfile, accounts, updateUserAccount]
   );
 
   const rejectTopUp = useCallback(
@@ -344,15 +449,20 @@ export function TokenProvider({ children }: { children: ReactNode }) {
       );
       setAllTopUpRequests(updated);
       saveToStorage("vb_topup_requests", updated);
+
+      if (isSupabaseConfigured && supabase) {
+        supabase.from("topup_requests").update({ status: "rejected" }).eq("id", topUpId).then();
+      }
     },
     [allTopUpRequests]
   );
 
   const processWithdraw = useCallback(
     (withdrawId: string) => {
+      const processedTime = new Date().toISOString();
       const updated = allWithdrawRequests.map((r) =>
         r.id === withdrawId
-          ? { ...r, status: "processed" as const, processedAt: new Date().toISOString() }
+          ? { ...r, status: "processed" as const, processedAt: processedTime }
           : r
       );
       setAllWithdrawRequests(updated);
@@ -366,6 +476,13 @@ export function TokenProvider({ children }: { children: ReactNode }) {
       );
       setFounderTransactions(updatedFndTxns);
       saveToStorage("vb_founder_transactions", updatedFndTxns);
+
+      if (isSupabaseConfigured && supabase) {
+        supabase.from("withdraw_requests").update({
+          status: "processed",
+          processed_at: processedTime,
+        }).eq("id", withdrawId).then();
+      }
     },
     [allWithdrawRequests, founderTransactions]
   );

@@ -1,29 +1,107 @@
 "use client";
 
-import { useState } from "react";
-import { Bot, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bot, Sparkles, Inbox } from "lucide-react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { AccessRequestCard } from "@/components/venturebridge/AccessRequestCard";
 import { mockAccessRequests } from "@/data/mock";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import type { AccessRequest } from "@/types";
 
 export default function AccessRequestsPage() {
-  const [requests, setRequests] = useState(mockAccessRequests);
+  const { user } = useAuth();
+  const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [activeTab, setActiveTab] = useState<"pending" | "disetujui" | "ditolak">("pending");
 
-  const totalRequests = 12;
+  useEffect(() => {
+    const currentUserId = user?.id || "user-1";
+    let userRequests: AccessRequest[] = [];
+
+    try {
+      const stored = localStorage.getItem("vb_access_requests");
+      if (stored) {
+        const all: AccessRequest[] = JSON.parse(stored);
+        userRequests = all;
+      } else {
+        // Initial fallback: only Dzakki (user-1) has default seed requests
+        if (currentUserId === "user-1") {
+          userRequests = mockAccessRequests;
+          localStorage.setItem("vb_access_requests", JSON.stringify(mockAccessRequests));
+        } else {
+          userRequests = [];
+        }
+      }
+    } catch {
+      userRequests = currentUserId === "user-1" ? mockAccessRequests : [];
+    }
+
+    setRequests(userRequests);
+
+    // Optional Supabase sync
+    if (isSupabaseConfigured && supabase) {
+      supabase
+        .from("access_requests")
+        .select("*")
+        .eq("founder_id", currentUserId)
+        .then(({ data, error }) => {
+          if (data && !error && data.length > 0) {
+            const remoteReqs: AccessRequest[] = data.map((d: any) => ({
+              id: d.id,
+              opportunityId: d.listing_id || "opp-1",
+              opportunityTitle: d.listing_title || "Startup",
+              requesterId: d.investor_id,
+              requester: {
+                id: d.investor_id,
+                name: d.investor_name,
+                initials: d.investor_initials || "IV",
+                title: d.investor_role || "Investor",
+                isVerified: true,
+                verificationBadges: [{ type: "identity", label: "Investor Terverifikasi" }],
+              },
+              status: d.status,
+              message: d.message,
+              matchScore: d.match_score || 90,
+              requestedAt: "Baru saja",
+              isHighMatch: (d.match_score || 90) >= 90,
+              requesterType: "investor",
+            }));
+            setRequests(remoteReqs);
+          }
+        });
+    }
+  }, [user]);
+
+  const totalRequests = requests.length;
   const menungguPersetujuan = requests.filter((r) => r.status === "pending").length;
   const aksesDiberikan = requests.filter((r) => r.status === "approved").length;
 
   function handleApprove(id: string) {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "approved" as const } : r))
+    const updated = requests.map((r) =>
+      r.id === id ? { ...r, status: "approved" as const } : r
     );
+    setRequests(updated);
+    try {
+      localStorage.setItem("vb_access_requests", JSON.stringify(updated));
+    } catch {}
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("access_requests").update({ status: "approved" }).eq("id", id).then();
+    }
   }
 
   function handleReject(id: string) {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "rejected" as const } : r))
+    const updated = requests.map((r) =>
+      r.id === id ? { ...r, status: "rejected" as const } : r
     );
+    setRequests(updated);
+    try {
+      localStorage.setItem("vb_access_requests", JSON.stringify(updated));
+    } catch {}
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("access_requests").update({ status: "rejected" }).eq("id", id).then();
+    }
   }
 
   const filteredRequests = requests.filter((r) => {

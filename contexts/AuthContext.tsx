@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export type ActiveRole = "founder" | "investor" | "cofounder" | "capex_provider" | "admin";
 
@@ -121,6 +122,7 @@ interface AuthContextType {
   login: (user: AuthUser) => void;
   logout: () => void;
   updateProfile: (updates: Partial<AuthUser>) => void;
+  updateUserAccount: (userId: string, updates: Partial<AuthUser>) => void;
   authenticateWithCredentials: (email: string, password: string) => { success: boolean; message?: string; user?: AuthUser };
   registerAccount: (newUserData: Omit<AuthUser, "id" | "initials">) => { success: boolean; message?: string; user?: AuthUser };
   authenticateWithGoogle: (googleEmail: string, googleName: string) => { success: boolean; user?: AuthUser; isNewUser?: boolean };
@@ -134,6 +136,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   updateProfile: () => {},
+  updateUserAccount: () => {},
   authenticateWithCredentials: () => ({ success: false }),
   registerAccount: () => ({ success: false }),
   authenticateWithGoogle: () => ({ success: false }),
@@ -181,6 +184,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsInitialized(true);
     }
+
+    // Optional Supabase cloud sync
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("profiles").select("*").then(({ data, error }) => {
+        if (data && data.length > 0 && !error) {
+          const remoteAccounts: AuthUser[] = data.map((row: any) => ({
+            id: row.id,
+            name: row.name,
+            initials: row.initials,
+            title: row.title,
+            role: row.role as ActiveRole,
+            roles: row.roles || [row.role],
+            email: row.email,
+            password: row.password,
+            company: row.company,
+            location: row.location,
+            bio: row.bio,
+            avatarColor: row.avatar_color,
+            isVerified: row.is_verified,
+            profileCompletion: row.profile_completion,
+            tokenBalance: row.token_balance,
+            founderTokenBalance: row.founder_token_balance,
+            unlockedOpportunities: row.unlocked_opportunities,
+          }));
+          setAccounts((local) => {
+            const merged = [...local];
+            remoteAccounts.forEach((rem) => {
+              const idx = merged.findIndex((m) => m.id === rem.id || (m.email && rem.email && m.email.toLowerCase() === rem.email.toLowerCase()));
+              if (idx >= 0) {
+                merged[idx] = { ...merged[idx], ...rem };
+              } else {
+                merged.push(rem);
+              }
+            });
+            try {
+              localStorage.setItem("vb_database_accounts", JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      });
+    }
   }, []);
 
   function persistAccounts(updatedAccounts: AuthUser[]) {
@@ -189,6 +234,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("vb_database_accounts", JSON.stringify(updatedAccounts));
     } catch {}
   }
+
+  const updateUserAccount = useCallback((userId: string, updates: Partial<AuthUser>) => {
+    setAccounts((prevAccounts) => {
+      const updatedAccounts = prevAccounts.map((acc) =>
+        acc.id === userId ? { ...acc, ...updates } : acc
+      );
+      try {
+        localStorage.setItem("vb_database_accounts", JSON.stringify(updatedAccounts));
+      } catch {}
+      return updatedAccounts;
+    });
+
+    setUser((prevUser) => {
+      if (prevUser && prevUser.id === userId) {
+        const updated = { ...prevUser, ...updates };
+        try {
+          localStorage.setItem("vb_user", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      }
+      return prevUser;
+    });
+
+    if (isSupabaseConfigured && supabase) {
+      const dbUpdates: Record<string, any> = {};
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.tokenBalance !== undefined) dbUpdates.token_balance = updates.tokenBalance;
+      if (updates.founderTokenBalance !== undefined) dbUpdates.founder_token_balance = updates.founderTokenBalance;
+      if (updates.isVerified !== undefined) dbUpdates.is_verified = updates.isVerified;
+      if (updates.unlockedOpportunities !== undefined) dbUpdates.unlocked_opportunities = updates.unlockedOpportunities;
+      if (Object.keys(dbUpdates).length > 0) {
+        supabase.from("profiles").update(dbUpdates).eq("id", userId).then();
+      }
+    }
+  }, []);
 
   function login(newUser: AuthUser) {
     const roles = newUser.roles ?? [newUser.role];
@@ -208,14 +289,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("vb_user", JSON.stringify(updated));
       } catch {}
 
-      // also update in accounts database
-      if (prev.email) {
-        const updatedAccounts = accounts.map((acc) =>
-          acc.email?.toLowerCase() === prev.email?.toLowerCase() ? { ...acc, ...updates } : acc
-        );
-        persistAccounts(updatedAccounts);
+      if (prev.id) {
+        updateUserAccount(prev.id, updates);
       }
-
       return updated;
     });
   }
@@ -350,6 +426,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         updateProfile,
+        updateUserAccount,
         authenticateWithCredentials,
         registerAccount,
         authenticateWithGoogle,

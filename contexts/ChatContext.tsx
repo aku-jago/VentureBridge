@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth, AuthUser } from "./AuthContext";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export interface ChatMessage {
   id: string;
@@ -69,41 +70,6 @@ const SEED_MESSAGES: ChatMessage[] = [
     isRead: true,
     isDelivered: true,
   },
-  // Between Andi Wijaya (user-3) and Siti Rahmawati (user-2)
-  {
-    id: "msg-4",
-    senderId: "user-2",
-    senderName: "Siti Rahmawati",
-    receiverId: "user-3",
-    receiverName: "Andi Wijaya",
-    content: "Selamat siang Pak Andi, saya mengirimkan pitch deck putaran Seed untuk PANENLOKAL (AgriTech).",
-    timestamp: "Kemarin 14:20",
-    isRead: true,
-    isDelivered: true,
-  },
-  {
-    id: "msg-5",
-    senderId: "user-3",
-    senderName: "Andi Wijaya",
-    receiverId: "user-2",
-    receiverName: "Siti Rahmawati",
-    content: "Terima kasih Siti. Pitch deck sudah saya review, traksi 200+ petani sangat impressive.",
-    timestamp: "Kemarin 16:00",
-    isRead: true,
-    isDelivered: true,
-  },
-  // Between Andi Wijaya (user-3) and Budi Santoso (user-4)
-  {
-    id: "msg-6",
-    senderId: "user-4",
-    senderName: "Budi Santoso",
-    receiverId: "user-3",
-    receiverName: "Andi Wijaya",
-    content: "Pak Andi, kami punya lahan komersial 500m2 di Seturan yang cocok untuk konsep communal space.",
-    timestamp: "Senin 09:30",
-    isRead: true,
-    isDelivered: true,
-  },
 ];
 
 interface ChatContextValue {
@@ -140,6 +106,80 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } catch {
       setAllMessages(SEED_MESSAGES);
     }
+
+    // Optional Supabase initial fetch
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("messages").select("*").then(({ data, error }) => {
+        if (data && !error && data.length > 0) {
+          const remoteMsgs: ChatMessage[] = data.map((r: any) => ({
+            id: r.id,
+            senderId: r.sender_id,
+            senderName: r.sender_name,
+            receiverId: r.receiver_id,
+            receiverName: r.receiver_name,
+            content: r.content,
+            timestamp: r.timestamp,
+            isRead: r.is_read,
+            isDelivered: r.is_delivered,
+          }));
+
+          setAllMessages((local) => {
+            const merged = [...local];
+            remoteMsgs.forEach((rem) => {
+              if (!merged.some((m) => m.id === rem.id)) {
+                merged.push(rem);
+              }
+            });
+            try {
+              localStorage.setItem("vb_chat_messages", JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      });
+    }
+  }, []);
+
+  // Supabase Realtime Subscription for instant multi-device messaging
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+
+    const channel = supabase
+      .channel("realtime-messages-sync")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload: any) => {
+          const newMsg = payload.new;
+          if (!newMsg) return;
+          const mapped: ChatMessage = {
+            id: newMsg.id,
+            senderId: newMsg.sender_id,
+            senderName: newMsg.sender_name,
+            receiverId: newMsg.receiver_id,
+            receiverName: newMsg.receiver_name,
+            content: newMsg.content,
+            timestamp: newMsg.timestamp,
+            isRead: newMsg.is_read,
+            isDelivered: newMsg.is_delivered,
+          };
+          setAllMessages((prev) => {
+            if (prev.some((m) => m.id === mapped.id)) return prev;
+            const updated = [...prev, mapped];
+            try {
+              localStorage.setItem("vb_chat_messages", JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   // Listen to cross-tab / storage updates for genuine real-time typing & message sync
@@ -153,7 +193,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       if (e.key === "vb_typing_status" && e.newValue) {
         try {
           const status = JSON.parse(e.newValue);
-          // Check if anyone is typing to me right now (within 3 seconds)
           const now = Date.now();
           const activeTyping: Record<string, boolean> = {};
           Object.keys(status).forEach((senderId) => {
@@ -166,7 +205,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Interval to expire old typing indicators
     const typingInterval = setInterval(() => {
       try {
         const raw = localStorage.getItem("vb_typing_status");
@@ -242,7 +280,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   function sendMessage(receiverId: string, receiverName: string, content: string) {
     if (!content.trim()) return;
 
-    // Reset typing status immediately when message is sent
     setMyTypingStatus(receiverId, false);
 
     const newMsg: ChatMessage = {
@@ -257,7 +294,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       isDelivered: true,
     };
 
-    // Mark previous incoming messages from that sender as read
     const updatedMessages = allMessages.map((m) => {
       if (m.receiverId === currentUserId && m.senderId === receiverId && !m.isRead) {
         return { ...m, isRead: true, isDelivered: true };
@@ -265,8 +301,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return m;
     });
 
-    // Save only real messages sent by human users (NO fake automated replies!)
     persist([...updatedMessages, newMsg]);
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("messages").insert({
+        id: newMsg.id,
+        sender_id: newMsg.senderId,
+        sender_name: newMsg.senderName,
+        receiver_id: newMsg.receiverId,
+        receiver_name: newMsg.receiverName,
+        content: newMsg.content,
+        timestamp: newMsg.timestamp,
+        is_read: false,
+        is_delivered: true,
+      }).then();
+    }
   }
 
   function getMessagesWithUser(otherUserId: string): ChatMessage[] {

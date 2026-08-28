@@ -6,6 +6,9 @@ import { ArrowLeft, Upload, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import type { Opportunity } from "@/types";
+import { mockOpportunities } from "@/data/mock";
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -23,13 +26,66 @@ export default function NewListingPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
+
+    const newListingId = `opp-${Date.now()}`;
+    const authorId = user?.id || "user-1";
+    const authorName = user?.name || "Founder Weaven";
+    const numTargetFunding = Number(targetFunding) || 500000000;
+
+    const newListing: Opportunity = {
+      id: newListingId,
+      title: title.trim(),
+      shortDescription: tagline.trim(),
+      description: tagline.trim(),
+      sector: [sector],
+      stage: stage as any,
+      targetFunding: numTargetFunding,
+      location: location.trim() || "Indonesia",
+      founderId: authorId,
+      founder: {
+        id: authorId,
+        name: authorName,
+        initials: user?.initials || "FN",
+      },
+      seekingRoles: seeking as any,
+      verificationStatus: "pending",
+      matchScore: 90,
+      createdAt: new Date().toISOString(),
+      traction: "Baru dipublikasikan",
+    };
+
+    // Save to local storage
+    try {
+      const stored = localStorage.getItem("vb_user_listings");
+      const currentList: Opportunity[] = stored ? JSON.parse(stored) : mockOpportunities;
+      const updated = [newListing, ...currentList];
+      localStorage.setItem("vb_user_listings", JSON.stringify(updated));
+    } catch {}
+
+    // Save to Supabase if connected
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("listings").insert({
+        id: newListing.id,
+        user_id: authorId,
+        author_name: authorName,
+        title: newListing.title,
+        category: sector,
+        stage: stage,
+        target_amount: numTargetFunding,
+        location: newListing.location,
+        description: tagline,
+        status: "active",
+        avg_match: 90,
+      }).then();
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
       setTimeout(() => {
         router.push("/dashboard/listings");
-      }, 1200);
-    }, 800);
+      }, 1000);
+    }, 600);
   }
 
   return (
