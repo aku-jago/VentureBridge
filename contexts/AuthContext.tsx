@@ -20,6 +20,9 @@ export interface AuthUser {
   company?: string;
   headline?: string;
   avatarColor?: string;
+  avatarUrl?: string;
+  avatar?: string;
+  bannerUrl?: string;
   investorTicketRange?: string;
   investorSectors?: string[];
   investorStages?: string[];
@@ -210,6 +213,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             location: row.location,
             bio: row.bio,
             avatarColor: row.avatar_color,
+            avatarUrl: row.avatar_url,
+            bannerUrl: row.banner_url,
             isVerified: row.is_verified,
             profileCompletion: row.profile_completion,
             tokenBalance: row.token_balance,
@@ -321,6 +326,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const dbUpdates: Record<string, any> = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.avatarUrl !== undefined) dbUpdates.avatar_url = updates.avatarUrl;
+      if (updates.bannerUrl !== undefined) dbUpdates.banner_url = updates.bannerUrl;
       if (updates.tokenBalance !== undefined) dbUpdates.token_balance = updates.tokenBalance;
       if (updates.founderTokenBalance !== undefined) dbUpdates.founder_token_balance = updates.founderTokenBalance;
       if (updates.isVerified !== undefined) dbUpdates.is_verified = updates.isVerified;

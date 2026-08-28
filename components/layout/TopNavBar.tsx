@@ -144,16 +144,21 @@ export function TopNavBar({ variant = "public" }: TopNavBarProps) {
                     width: 28,
                     height: 28,
                     borderRadius: "50%",
-                    background: user.role === "investor" ? "#16a34a" : "#2563eb",
+                    background: user.avatarColor || (user.role === "investor" ? "#16a34a" : "#2563eb"),
                     color: "#fff",
                     fontSize: 11,
                     fontWeight: 700,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    overflow: "hidden",
                   }}
                 >
-                  {user.initials}
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    user.initials
+                  )}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>

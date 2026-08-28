@@ -211,9 +211,14 @@ export function DashboardSidebar({
               fontWeight: 700,
               color: "#fff",
               flexShrink: 0,
+              overflow: "hidden",
             }}
           >
-            {initials}
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              initials
+            )}
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#f9fafb" }}>

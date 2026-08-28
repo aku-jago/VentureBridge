@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   location TEXT,
   bio TEXT,
   avatar_color TEXT DEFAULT '#2563eb',
+  avatar_url TEXT,
+  banner_url TEXT,
   is_verified BOOLEAN DEFAULT FALSE,
   profile_completion INTEGER DEFAULT 80,
   token_balance INTEGER DEFAULT 0,

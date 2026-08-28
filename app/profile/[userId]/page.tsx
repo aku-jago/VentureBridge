@@ -20,6 +20,7 @@ import {
   DollarSign,
   ChevronDown,
   ChevronUp,
+  Camera,
 } from "lucide-react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +38,8 @@ interface MockProfile {
   location: string;
   bio: string;
   avatarColor: string;
+  avatarUrl?: string;
+  bannerUrl?: string;
   isVerified: boolean;
   roles: ActiveRole[];
   joinedAt: string;
@@ -258,6 +261,8 @@ export default function PublicProfilePage() {
           location: currentUser.location || "Indonesia",
           bio: currentUser.bio || "Belum ada bio. Edit profil Anda untuk menambahkan informasi.",
           avatarColor: currentUser.avatarColor || "#2563eb",
+          avatarUrl: currentUser.avatarUrl || currentUser.avatar,
+          bannerUrl: currentUser.bannerUrl,
           isVerified: currentUser.isVerified || false,
           roles: (currentUser.roles as ActiveRole[]) || ["founder"],
           joinedAt: "Baru bergabung",
@@ -306,55 +311,110 @@ export default function PublicProfilePage() {
       {/* Header Card */}
       <div
         className="card"
-        style={{ overflow: "hidden", marginBottom: 20 }}
+        style={{ overflow: "hidden", marginBottom: 20, borderRadius: 16, border: "1px solid #e2e8f0" }}
       >
-        {/* Cover */}
+        {/* Cover Banner */}
         <div
           style={{
-            height: 140,
-            background: `linear-gradient(135deg, ${profile.avatarColor}22 0%, ${profile.avatarColor}44 100%)`,
-            borderBottom: `3px solid ${profile.avatarColor}33`,
+            height: 160,
+            background: profile.bannerUrl
+              ? (profile.bannerUrl.startsWith("data:") || profile.bannerUrl.startsWith("http")
+                ? `url("${profile.bannerUrl}") center/cover no-repeat`
+                : profile.bannerUrl)
+              : `linear-gradient(135deg, ${profile.avatarColor}22 0%, ${profile.avatarColor}55 100%)`,
+            borderBottom: `1px solid rgba(0,0,0,0.08)`,
             position: "relative",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: `radial-gradient(circle at 20% 50%, ${profile.avatarColor}15 0%, transparent 50%), radial-gradient(circle at 80% 20%, ${profile.avatarColor}20 0%, transparent 40%)`,
-            }}
-          />
+          {isOwnProfile && (
+            <Link
+              href="/profile/edit"
+              style={{
+                position: "absolute",
+                top: 14,
+                right: 14,
+                background: "rgba(0,0,0,0.6)",
+                color: "#fff",
+                padding: "6px 14px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+                backdropFilter: "blur(6px)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+              }}
+            >
+              <Camera size={13} /> Edit Banner
+            </Link>
+          )}
         </div>
 
         <div style={{ padding: "0 28px 24px" }}>
-          {/* Avatar */}
-          <div style={{ position: "relative", display: "inline-block", marginTop: -44 }}>
+          {/* Avatar Row */}
+          <div style={{ position: "relative", display: "inline-block", marginTop: -48 }}>
             <div
               style={{
-                width: 88,
-                height: 88,
+                width: 96,
+                height: 96,
                 borderRadius: "50%",
                 background: profile.avatarColor,
                 border: "4px solid #fff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: 800,
                 color: "#fff",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.18)",
+                overflow: "hidden",
+                position: "relative",
               }}
             >
-              {profile.initials}
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.name}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                profile.initials
+              )}
             </div>
-            {profile.isVerified && (
+
+            {isOwnProfile ? (
+              <Link
+                href="/profile/edit"
+                style={{
+                  position: "absolute",
+                  bottom: 2,
+                  right: 2,
+                  width: 28,
+                  height: 28,
+                  background: "#2563eb",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "2px solid #fff",
+                  color: "#fff",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                  textDecoration: "none",
+                }}
+                title="Ubah Foto Profil"
+              >
+                <Camera size={14} />
+              </Link>
+            ) : profile.isVerified ? (
               <div
                 style={{
                   position: "absolute",
-                  bottom: 4,
-                  right: 4,
-                  width: 22,
-                  height: 22,
+                  bottom: 2,
+                  right: 2,
+                  width: 24,
+                  height: 24,
                   background: "#2563eb",
                   borderRadius: "50%",
                   display: "flex",
@@ -363,9 +423,9 @@ export default function PublicProfilePage() {
                   border: "2px solid #fff",
                 }}
               >
-                <BadgeCheck size={12} color="#fff" />
+                <BadgeCheck size={14} color="#fff" />
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Actions row */}
