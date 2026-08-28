@@ -161,7 +161,7 @@ export function DashboardSidebar({
             <Rocket size={15} color="#fff" />
           </div>
           <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>
-            VentureBridge
+            Weaven
           </span>
         </Link>
 

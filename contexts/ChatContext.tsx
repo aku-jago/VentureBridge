@@ -284,7 +284,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       sendMessage(
         otherId,
         otherUser.name,
-        `Halo ${otherUser.name}, senang bisa terhubung di VentureBridge!`
+        `Halo ${otherUser.name}, senang bisa terhubung di Weaven!`
       );
     }
     return otherId;

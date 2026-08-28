@@ -23,7 +23,7 @@ const QUICK_PROMPTS = [
 
 const AI_RESPONSES: Record<string, string> = {
   default:
-    "Halo! Saya adalah AI Copilot VentureBridge. Saya dirancang khusus untuk membantu Anda di ekosistem startup Indonesia.\n\nSaya bisa membantu Anda:\n• Menganalisis potensi bisnis dan investor readiness\n• Menemukan investor yang paling sesuai dengan profil bisnis Anda\n• Menyusun executive summary dan pitch deck outline\n• Memberikan insight tentang tren industri terkini\n• Mempersiapkan Anda untuk meeting dengan investor\n\nApa yang ingin Anda diskusikan hari ini?",
+    "Halo! Saya adalah AI Copilot Weaven. Saya dirancang khusus untuk membantu Anda merajut potensi bisnis (Ide × Modal × Talent × Aset) di ekosistem Indonesia.\n\nSaya bisa membantu Anda:\n• Menganalisis potensi bisnis dan investor readiness\n• Menemukan investor & partner yang paling sesuai dengan profil bisnis Anda\n• Menyusun executive summary dan pitch deck outline\n• Memberikan insight tentang tren industri terkini\n• Mempersiapkan Anda untuk meeting dengan investor\n\nApa yang ingin Anda diskusikan hari ini?",
   "Analisis listing EDUKITA saya":
     "Berdasarkan analisis mendalam terhadap listing EDUKITA Anda:\n\n**🟢 Kekuatan Utama:**\n• Pertumbuhan pengguna 5.000+ dalam 3 bulan menunjukkan product-market fit yang kuat\n• Sektor EdTech Indonesia memiliki TAM > $4 miliar (proyeksi 2025)\n• Tim dengan domain expertise yang relevan\n\n**🟡 Area untuk Ditingkatkan:**\n• Lengkapi proyeksi finansial 3 tahun (skor readiness naik +12 poin)\n• Tambahkan unit economics yang lebih detail (CAC, LTV, payback period)\n• Dokumentasikan rencana ekspansi ke kota-kota tier-2\n\n**💡 Rekomendasi Segera:**\nFokus investor readiness pada 3 dokumen: financial model, pitch deck, dan referensi pelanggan (case study). Ini akan meningkatkan conversion rate permintaan akses sebesar 3x.",
   "Siapa investor terbaik untuk bisnis saya?":
@@ -46,7 +46,7 @@ function getAIResponse(userMessage: string): string {
     return AI_RESPONSES["Analisis listing EDUKITA saya"];
   }
 
-  return "Terima kasih atas pertanyaan Anda! Berdasarkan data profil Anda di VentureBridge, saya sedang menganalisis...\n\nUntuk pertanyaan ini, saya merekomendasikan Anda untuk:\n1. Periksa bagian Investor Readiness Score di dashboard\n2. Lihat daftar Access Requests terbaru\n3. Review match score dengan investor potensial\n\nApakah ada aspek spesifik yang ingin Anda perdalam?";
+  return "Terima kasih atas pertanyaan Anda! Berdasarkan data profil Anda di Weaven, saya sedang menganalisis...\n\nUntuk pertanyaan ini, saya merekomendasikan Anda untuk:\n1. Periksa bagian Investor Readiness Score di dashboard\n2. Lihat daftar Access Requests terbaru\n3. Review match score dengan investor potensial\n\nApakah ada aspek spesifik yang ingin Anda perdalam?";
 }
 
 export default function AICopilotPage() {
@@ -139,7 +139,7 @@ export default function AICopilotPage() {
             </div>
             <div>
               <h1 style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>
-                VentureBridge AI Copilot
+                Weaven AI Copilot
               </h1>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div
@@ -151,7 +151,7 @@ export default function AICopilotPage() {
                     animation: "pulse 2s infinite",
                   }}
                 />
-                <span style={{ fontSize: 12, color: "#6b7280" }}>Online · Powered by VB AI</span>
+                <span style={{ fontSize: 12, color: "#6b7280" }}>Online · Powered by Weaven AI</span>
               </div>
             </div>
           </div>

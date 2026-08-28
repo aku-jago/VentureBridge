@@ -267,7 +267,7 @@ export default function FeedPage() {
       offerType: reachOutType,
       title: reachOutTitle || "Penawaran Solusi",
       message: reachOutMessage,
-      contactEmail: user?.email || "founder@venturebridge.id",
+      contactEmail: user?.email || "founder@weaven.id",
       contactPhone: reachOutPhone || "081234567890",
     });
 

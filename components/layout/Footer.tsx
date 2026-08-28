@@ -45,9 +45,13 @@ export function Footer() {
             <Rocket size={15} color="#fff" />
           </div>
           <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>
-            VentureBridge
+            Weaven
           </span>
         </div>
+
+        <p style={{ fontSize: 13, color: "#4b5563", fontStyle: "italic", maxWidth: 480 }}>
+          Weaving Possibilities into Ventures.
+        </p>
 
         {/* Links */}
         <nav style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "center" }}>
@@ -63,8 +67,8 @@ export function Footer() {
         </nav>
 
         {/* Copyright */}
-        <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
-          © 2024 VentureBridge Indonesia. Elevating the startup ecosystem.
+        <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+          © 2024 Weaven Indonesia. Weaving Possibilities into Ventures.
         </p>
       </div>
     </footer>

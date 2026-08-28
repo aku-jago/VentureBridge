@@ -116,7 +116,7 @@ export default function EditProfilePage() {
             <div>
               <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginBottom: 4 }}>Edit Profil</h1>
               <p style={{ fontSize: 14, color: "#6b7280" }}>
-                Profil Anda terlihat oleh semua pengguna VentureBridge.
+                Profil Anda terlihat oleh semua pengguna Weaven.
               </p>
             </div>
             <div style={{ display: "flex", gap: 10 }}>

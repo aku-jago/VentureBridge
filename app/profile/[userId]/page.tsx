@@ -850,7 +850,7 @@ export default function PublicProfilePage() {
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 24px" }}>
         {content}
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "16px 24px", background: "#fff", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "center", gap: 12 }}>
-          <span style={{ fontSize: 14, color: "#374151" }}>Lihat profil lebih lengkap dengan bergabung ke VentureBridge</span>
+          <span style={{ fontSize: 14, color: "#374151" }}>Lihat profil lebih lengkap dengan bergabung ke Weaven</span>
           <Link href="/register" style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
             Daftar Gratis
           </Link>

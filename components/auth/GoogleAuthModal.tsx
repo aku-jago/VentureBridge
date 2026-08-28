@@ -180,7 +180,7 @@ export function GoogleAuthModal({ onClose, mode = "login" }: GoogleAuthModalProp
           {step === "enter_google" && (
             <div>
               <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 16, lineHeight: 1.5 }}>
-                Hubungkan akun Google Anda untuk masuk atau mendaftar secara instan di VentureBridge.
+                Hubungkan akun Google Anda untuk masuk atau mendaftar secara instan di Weaven.
               </p>
 
               <form onSubmit={handleGoogleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>

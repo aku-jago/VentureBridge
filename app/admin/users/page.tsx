@@ -70,7 +70,7 @@ export default function AdminUsersPage() {
               Kelola Pengguna
             </h1>
             <p style={{ fontSize: 13, color: "#64748b" }}>
-              Pantau dan kelola semua pengguna VentureBridge
+              Pantau dan kelola semua pengguna Weaven
             </p>
           </div>
         </div>

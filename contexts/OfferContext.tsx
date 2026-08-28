@@ -19,7 +19,7 @@ export const INITIAL_OFFERS: InboundOffer[] = [
     offerType: "capex",
     title: "Tawaran Ruko Strategis Jl. Kaliurang Km 5.5",
     message: "Halo Pak Andi, rekan kami memiliki ruko 2 lantai siap pakai di Jl. Kaliurang km 5.5 (dekat UGM), luas 150m2 dengan sewa 140jt/tahun, sangat cocok untuk F&B cloud kitchen jaringan Anda. Siap survei lokasi minggu ini.",
-    contactEmail: "founder@venturebridge.id",
+    contactEmail: "founder@weaven.id",
     contactPhone: "081234567890",
     status: "pending",
     createdAt: "30 menit yang lalu",

@@ -28,14 +28,14 @@ export default function AdminProfilePage() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   const [form, setForm] = useState({
-    name: "Admin VentureBridge",
-    email: "admin@venturebridge.id",
+    name: "Admin Weaven",
+    email: "admin@weaven.id",
     phone: "+62 812-3456-7890",
-    website: "venturebridge.id",
-    bio: "Super Administrator VentureBridge Platform. Bertanggung jawab atas pengelolaan sistem, konfirmasi pembayaran token, dan verifikasi pengguna.",
+    website: "weaven.id",
+    bio: "Super Administrator Weaven Platform. Bertanggung jawab atas pengelolaan sistem, konfirmasi pembayaran token, dan verifikasi pengguna.",
     bankName: "BCA",
     accountNumber: "1234567890",
-    accountHolder: "VentureBridge Indonesia",
+    accountHolder: "Weaven Indonesia",
   });
 
   const [editForm, setEditForm] = useState({ ...form });

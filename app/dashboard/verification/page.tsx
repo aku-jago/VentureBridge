@@ -127,7 +127,7 @@ export default function BusinessVerificationPage() {
                 </div>
                 <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
                   {overallStatus === "under_review"
-                    ? "Tim VentureBridge sedang meninjau dokumen Anda. Estimasi 2-3 hari kerja."
+                    ? "Tim Weaven sedang meninjau dokumen Anda. Estimasi 2-3 hari kerja."
                     : "Lengkapi semua dokumen yang diperlukan untuk proses verifikasi."}
                 </div>
               </div>
@@ -409,7 +409,7 @@ export default function BusinessVerificationPage() {
               }}
             >
               <div style={{ fontSize: 12, fontWeight: 700, color: "#2563eb", marginBottom: 4 }}>
-                💡 Tips VentureBridge
+                💡 Tips Weaven
               </div>
               <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
                 Bisnis terverifikasi mendapatkan 3x lebih banyak permintaan akses dari investor.

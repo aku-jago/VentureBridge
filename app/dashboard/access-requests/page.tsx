@@ -183,7 +183,7 @@ export default function AccessRequestsPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
-                    VentureBridge AI
+                    Weaven AI
                   </div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
                     91%

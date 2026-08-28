@@ -33,10 +33,10 @@ export default function HelpCenterPage() {
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px 80px" }}>
       <div style={{ textAlign: "center", marginBottom: 40 }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, color: "#111827", marginBottom: 12 }}>
-          Pusat Bantuan VentureBridge
+          Pusat Bantuan Weaven
         </h1>
         <p style={{ fontSize: 15, color: "#6b7280", maxWidth: 540, margin: "0 auto" }}>
-          Temukan jawaban atas pertanyaan umum seputar pencarian modal, NDA, dan fitur platform.
+          Temukan jawaban atas pertanyaan umum seputar merajut ide, modal, NDA, dan fitur platform Weaven.
         </p>
       </div>
 
@@ -76,12 +76,12 @@ export default function HelpCenterPage() {
               Butuh bantuan lebih lanjut?
             </div>
             <div style={{ fontSize: 13, color: "#3b82f6" }}>
-              Tim dukungan kami siap membantu Anda di support@venturebridge.id
+              Tim dukungan kami siap membantu Anda di support@weaven.id
             </div>
           </div>
         </div>
         <a
-          href="mailto:support@venturebridge.id"
+          href="mailto:support@weaven.id"
           style={{
             padding: "8px 18px",
             background: "#2563eb",

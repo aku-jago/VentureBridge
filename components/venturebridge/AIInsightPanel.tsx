@@ -91,7 +91,7 @@ export function AIInsightPanel({
         </div>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
-            VentureBridge AI – Partner Berpikir
+            Weaven AI – Partner Berpikir
           </div>
           <div style={{ fontSize: 12, color: "#9ca3af" }}>
             Saya asisten AI Anda

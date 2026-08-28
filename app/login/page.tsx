@@ -84,7 +84,7 @@ export default function LoginPage() {
           <Rocket size={20} color="#fff" />
         </div>
         <span style={{ fontSize: 22, fontWeight: 800, color: "#111827" }}>
-          VentureBridge
+          Weaven
         </span>
       </Link>
 
@@ -303,7 +303,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <p style={{ marginTop: 24, fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
-        © 2024 VentureBridge Indonesia.{" "}
+        © 2024 Weaven Indonesia. Weaving Possibilities into Ventures.{" "}
         <Link href="/terms" style={{ color: "#6b7280" }}>Syarat & Ketentuan</Link>
         {" · "}
         <Link href="/privacy" style={{ color: "#6b7280" }}>Privasi</Link>

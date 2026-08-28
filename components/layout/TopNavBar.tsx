@@ -78,7 +78,7 @@ export function TopNavBar({ variant = "public" }: TopNavBarProps) {
               letterSpacing: "-0.02em",
             }}
           >
-            VentureBridge
+            Weaven
           </span>
         </Link>
 

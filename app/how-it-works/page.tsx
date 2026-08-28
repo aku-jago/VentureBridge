@@ -5,8 +5,8 @@ import { TopNavBar } from "@/components/layout/TopNavBar";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Cara Kerja — VentureBridge",
-  description: "Pelajari bagaimana ekosistem VentureBridge menghubungkan founder, investor, dan mitra bisnis.",
+  title: "Cara Kerja — Weaven",
+  description: "Pelajari bagaimana ekosistem Weaven merajut ide, modal, talent, dan aset menjadi venture nyata.",
 };
 
 export default function HowItWorksPage() {
@@ -30,13 +30,13 @@ export default function HowItWorksPage() {
                 marginBottom: 16,
               }}
             >
-              ALUR EKOSISTEM
+              WEAVEN ECOSYSTEM
             </span>
             <h1 style={{ fontSize: 36, fontWeight: 800, color: "#111827", marginBottom: 12 }}>
-              Bagaimana VentureBridge Bekerja?
+              Bagaimana Weaven Bekerja?
             </h1>
             <p style={{ fontSize: 16, color: "#6b7280", maxWidth: 640, margin: "0 auto", lineHeight: 1.6 }}>
-              Platform terstruktur yang menjembatani ide bisnis inovatif dengan investor dan co-founder yang tepat melalui kurasi data dan AI.
+              Weaven adalah ekosistem tempat berbagai potensi (Idea × Capital × Talent × Assets) dirajut menjadi peluang nyata.
             </p>
           </div>
 

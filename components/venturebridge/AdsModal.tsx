@@ -26,7 +26,7 @@ export function AdsModal({ listingId, listingTitle, listingType, onClose }: AdsM
   const [paymentNote, setPaymentNote] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const ADMIN_BANK = { bank: "BCA", number: "1234567890", holder: "VentureBridge Indonesia" };
+  const ADMIN_BANK = { bank: "BCA", number: "1234567890", holder: "Weaven Indonesia" };
 
   function handleSelectPkg(pkg: AdsPackage) {
     setSelectedPkg(pkg);

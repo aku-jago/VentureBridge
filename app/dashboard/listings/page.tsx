@@ -33,7 +33,7 @@ export default function MyListingsPage() {
               Listing Bisnis Saya
             </h1>
             <p style={{ fontSize: 14, color: "#6b7280" }}>
-              Kelola dan pantau performa listing bisnis Anda yang aktif di VentureBridge.
+              Kelola dan pantau performa listing bisnis Anda yang aktif di Weaven.
             </p>
           </div>
           <Link

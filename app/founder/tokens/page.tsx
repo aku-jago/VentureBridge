@@ -82,7 +82,7 @@ export default function FounderTokensPage() {
 
   const BANK = "BCA";
   const ACCOUNT = "1234567890";
-  const HOLDER = "VentureBridge Indonesia";
+  const HOLDER = "Weaven Indonesia";
 
   const totalEarned = founderTransactions.filter(t => t.type === "receive").reduce((s, t) => s + t.amount, 0);
   const totalWithdrawn = Math.abs(founderTransactions.filter(t => t.type === "withdraw" || t.type === "withdraw_pending").reduce((s, t) => s + t.amount, 0));

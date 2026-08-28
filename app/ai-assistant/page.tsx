@@ -47,7 +47,7 @@ const SIMULATED_RESULTS: Record<string, {
       "Kesiapan data profil memenuhi standar institusional",
     ],
     recommendation:
-      "Profil bisnis Anda menunjukkan keselarasan tinggi dengan 5 investor aktif di VentureBridge. Segera ajukan permintaan matching untuk memulai percakapan.",
+      "Profil bisnis Anda menunjukkan keselarasan tinggi dengan 5 investor aktif di Weaven. Segera ajukan permintaan matching untuk memulai percakapan.",
   },
 };
 
@@ -91,7 +91,7 @@ export default function AIAssistantPublicPage() {
         >
           <Sparkles size={16} color="#2563eb" />
           <span style={{ fontSize: 13, fontWeight: 700, color: "#2563eb" }}>
-            VentureBridge AI Copilot
+            Weaven AI Copilot
           </span>
         </div>
         <h1
@@ -260,7 +260,7 @@ export default function AIAssistantPublicPage() {
                   Hasil Analisis AI Match
                 </div>
                 <div style={{ fontSize: 12, color: "#6b7280" }}>
-                  Berdasarkan database kurasi ekosistem VentureBridge
+                  Berdasarkan database kurasi ekosistem Weaven
                 </div>
               </div>
             </div>

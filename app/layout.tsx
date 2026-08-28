@@ -8,15 +8,15 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "VentureBridge — Platform Ekosistem Bisnis Indonesia",
-    template: "%s | VentureBridge",
+    default: "Weaven — Weaving Possibilities into Ventures",
+    template: "%s | Weaven",
   },
   description:
-    "Temukan modal, co-founder, mentor, dan peluang bisnis yang tepat dalam satu platform. VentureBridge menghubungkan potensi dengan ekosistem.",
-  keywords: ["startup", "investor", "Indonesia", "bisnis", "peluang", "co-founder", "mentor"],
+    "Weaven is where ideas, capital, talent, and assets are woven into ventures. Alone, they are resources. Together, they become a venture.",
+  keywords: ["startup", "investor", "Indonesia", "bisnis", "peluang", "co-founder", "talent", "modal", "assets", "ventures", "Weaven"],
   openGraph: {
-    title: "VentureBridge — Platform Ekosistem Bisnis Indonesia",
-    description: "Temukan modal, co-founder, mentor, dan peluang bisnis yang tepat.",
+    title: "Weaven — Weaving Possibilities into Ventures",
+    description: "Weaven is where ideas, capital, talent, and assets are woven into ventures. Alone, they are resources. Together, they become a venture.",
     type: "website",
     locale: "id_ID",
   },

@@ -53,6 +53,24 @@ export default function LandingPage() {
           >
             {/* Left: Copy */}
             <div>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 14px",
+                  background: "#eff6ff",
+                  borderRadius: 999,
+                  color: "#2563eb",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  marginBottom: 16,
+                  border: "1px solid #dbeafe",
+                }}
+              >
+                <Rocket size={14} />
+                WEAVEN • Weaving Possibilities into Ventures
+              </div>
               <h1
                 style={{
                   fontSize: 44,
@@ -63,23 +81,35 @@ export default function LandingPage() {
                   marginBottom: 20,
                 }}
               >
-                Ide Hebat Tidak Harus{" "}
-                <span style={{ color: "#2563eb" }}>Berhenti</span>{" "}
-                di Atas Kertas.
+                Weaving Possibilities{" "}
+                <span style={{ color: "#2563eb" }}>into Ventures</span>.
               </h1>
               <p
                 style={{
                   fontSize: 16,
-                  color: "#6b7280",
+                  color: "#4b5563",
                   lineHeight: 1.7,
-                  marginBottom: 32,
-                  maxWidth: 460,
+                  marginBottom: 24,
+                  maxWidth: 480,
                 }}
               >
-                Temukan modal, co-founder, mentor, dan peluang bisnis yang tepat
-                dalam satu platform. VentureBridge menghubungkan potensi dengan
-                ekosistem.
+                Weaven is where <strong>ideas</strong>, <strong>capital</strong>, <strong>talent</strong>, and <strong>assets</strong> are woven into ventures. 
+                Satu ekosistem terpadu tempat berbagai potensi yang sebelumnya terpisah dirajut menjadi peluang nyata.
               </p>
+              <div
+                style={{
+                  padding: "10px 14px",
+                  background: "#f0fdf4",
+                  borderLeft: "3px solid #16a34a",
+                  borderRadius: "0 8px 8px 0",
+                  marginBottom: 28,
+                  fontSize: 13,
+                  color: "#166534",
+                  fontWeight: 500,
+                }}
+              >
+                💡 <em>"Alone, they are resources. Together, they become a venture."</em>
+              </div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 {isLoggedIn ? (
                   <>
@@ -170,7 +200,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 2 }}>
-                    AI Assistant
+                    Weaven AI Copilot
                   </div>
                   <div style={{ fontSize: 13, color: "#374151", fontStyle: "italic" }}>
                     "Cari bisnis sesuai profil saya" →
@@ -181,23 +211,42 @@ export default function LandingPage() {
 
             {/* Right: Visual Cards */}
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Explore preview card */}
+              {/* Brand Philosophy Interactive Card */}
               <div
                 className="card"
-                style={{ padding: "16px 20px" }}
+                style={{
+                  padding: "20px",
+                  background: "linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%)",
+                  color: "#fff",
+                  borderRadius: 12,
+                  border: "1px solid #312e81",
+                }}
               >
-                <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  Beranda
+                <div style={{ fontSize: 11, color: "#818cf8", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                  The 4 Weaven Pillars
                 </div>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-                  <div style={{ flex: 1, height: 60, background: "#f3f4f6", borderRadius: 8 }} />
-                  <div style={{ flex: 1, height: 60, background: "#eff6ff", borderRadius: 8 }} />
+                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 12 }}>
+                  Idea × Capital × Talent × Assets
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {["EdTech", "AgriTech", "FinTech"].map((s) => (
-                    <span key={s} style={{ padding: "3px 10px", background: "#f3f4f6", borderRadius: 20, fontSize: 12, color: "#6b7280", border: "1px solid #e5e7eb" }}>
-                      {s}
-                    </span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {[
+                    { label: "Idea", desc: "Ide & Inovasi", color: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
+                    { label: "Capital", desc: "Modal & Investor", color: "#34d399", bg: "rgba(52,211,153,0.12)" },
+                    { label: "Talent", desc: "Skill & Builder", color: "#f472b6", bg: "rgba(244,114,182,0.12)" },
+                    { label: "Assets", desc: "Peluang & Alat", color: "#fbbf24", bg: "rgba(251,191,36,0.12)" },
+                  ].map((p) => (
+                    <div
+                      key={p.label}
+                      style={{
+                        background: p.bg,
+                        border: `1px solid ${p.color}33`,
+                        borderRadius: 8,
+                        padding: "8px 10px",
+                      }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 700, color: p.color }}>{p.label}</div>
+                      <div style={{ fontSize: 11, color: "#cbd5e1" }}>{p.desc}</div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -206,10 +255,10 @@ export default function LandingPage() {
               <div className="card" style={{ padding: "16px 20px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
-                    Peluang Investasi
+                    Peluang Weaven Terkurasi
                   </div>
                   <span style={{ padding: "2px 8px", background: "#eff6ff", color: "#2563eb", borderRadius: 4, fontSize: 11, fontWeight: 600 }}>
-                    Direkomendasikan AI
+                    Weaven AI Match
                   </span>
                 </div>
                 {[
@@ -241,7 +290,7 @@ export default function LandingPage() {
         </section>
 
         {/* ============================
-            MASALAH + SOLUSI
+            BRAND PHILOSOPHY & NARRATIVE
             ============================ */}
         <section style={{ padding: "64px 24px", background: "#f8f9fa" }}>
           <div
@@ -253,7 +302,7 @@ export default function LandingPage() {
               gap: 32,
             }}
           >
-            {/* Masalah */}
+            {/* Masalah & Potensi Terpisah */}
             <div className="card" style={{ padding: "32px" }}>
               <div
                 style={{
@@ -267,26 +316,30 @@ export default function LandingPage() {
                   marginBottom: 20,
                 }}
               >
-                <span style={{ fontSize: 22 }}>😓</span>
+                <span style={{ fontSize: 22 }}>🧩</span>
               </div>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#111827", marginBottom: 12 }}>
-                Masalah
+                Tantangan: Potensi yang Terpisah
               </h2>
-              <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7 }}>
-                Ribuan ide bisnis lahir setiap hari di Indonesia, namun sebagian
-                besar terhenti sebelum berkembang. Kurangnya akses ke modal yang
-                tepat, sulitnya menemukan co-founder yang kompeten, dan minimnya
-                bimbingan bisnis membuat banyak inovasi terhenti di atas kertas.
+              <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.7, marginBottom: 12 }}>
+                Sebuah bisnis bukan tercipta hanya karena ada ide. Sebuah ide membutuhkan: <strong>Idea × Capital × Talent × Assets</strong>.
               </p>
+              <ul style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
+                <li>Ada mahasiswa/founder yang punya ide bagus, tetapi tidak punya modal.</li>
+                <li>Ada investor yang punya modal, tetapi kesulitan menemukan peluang yang sesuai.</li>
+                <li>Ada profesional bertalenta, tetapi belum menemukan venture yang tepat untuk dibangun.</li>
+                <li>Ada aset yang menganggur, tetapi tidak bertemu dengan pihak yang bisa mengoptimalkannya.</li>
+              </ul>
             </div>
 
-            {/* Solusi */}
+            {/* Solusi: Ekosistem Weaven */}
             <div
               style={{
                 background: "#2563eb",
                 borderRadius: 10,
                 padding: "32px",
                 boxShadow: "0 4px 16px rgba(37,99,235,0.25)",
+                color: "#fff",
               }}
             >
               <div
@@ -304,14 +357,23 @@ export default function LandingPage() {
                 <Rocket size={22} color="#fff" />
               </div>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
-                Solusi: Ekosistem VentureBridge
+                Solusi: Weaven Ecosystem
               </h2>
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>
-                Kami membangun jembatan antara ide dan realita. VentureBridge
-                adalah platform terintegrasi yang mempertemukan ide-ide dengan
-                investor yang tepat menggunakan algoritma AI canggih, membangun
-                ekosistem kolaborasi yang aman dan transparan.
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.9)", lineHeight: 1.7, marginBottom: 16 }}>
+                Weaven hadir untuk merajut semuanya. Seperti benang-benang yang sendiri-sendiri mungkin terlihat biasa, tetapi ketika dirajut dengan struktur yang tepat, mereka menjadi sesuatu yang jauh lebih bernilai.
               </p>
+              <div
+                style={{
+                  padding: "12px 16px",
+                  background: "rgba(0,0,0,0.2)",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  lineHeight: 1.5,
+                }}
+              >
+                ✨ <em>"We don’t just connect people. We weave possibilities into ventures."</em>
+              </div>
             </div>
           </div>
         </section>
@@ -329,10 +391,10 @@ export default function LandingPage() {
                 marginBottom: 8,
               }}
             >
-              Cara Kerja
+              Cara Kerja Weaven
             </h2>
             <p style={{ fontSize: 16, color: "#6b7280", marginBottom: 56 }}>
-              Tiga langkah menuju peluncuran bisnis Anda.
+              Tiga langkah merajut potensi Anda menjadi venture nyata.
             </p>
 
             <div
@@ -346,20 +408,20 @@ export default function LandingPage() {
                 {
                   icon: <Search size={28} color="#2563eb" />,
                   bg: "#eff6ff",
-                  title: "Temukan (Discover)",
-                  desc: "Jelajahi database ide bisnis yang telah dikurasi atau temukan investor yang mencari profil seperti Anda.",
+                  title: "1. Weave / Temukan (Discover)",
+                  desc: "Jelajahi database ide bisnis yang telah dikurasi atau temukan investor dan talent yang mencari profil seperti Anda.",
                 },
                 {
                   icon: <Handshake size={28} color="#7c3aed" />,
                   bg: "#faf5ff",
-                  title: "Cocokkan (Match)",
-                  desc: "Gunakan algoritma AI kami untuk menemukan kecocokan sempurna antara pendiri, kemampuan, dan investor.",
+                  title: "2. Connect / Cocokkan (Match)",
+                  desc: "Gunakan Weaven AI Copilot kami untuk menemukan keselarasan sempurna antara ide, modal, aset, dan kemampuan.",
                 },
                 {
                   icon: <Rocket size={28} color="#2563eb" />,
                   bg: "#eff6ff",
-                  title: "Bangun (Build)",
-                  desc: "Mulai kolaborasi dengan tim virtual Anda, temukan co-founder yang tepat, dan luncurkan MVP Anda.",
+                  title: "3. Build / Bangun (Venture)",
+                  desc: "Mulai kolaborasi dengan tim dan mitra modal Anda, tanda tangani Smart NDA, dan wujudkan venture bisnis Anda.",
                 },
               ].map((step) => (
                 <div key={step.title} style={{ textAlign: "center" }}>
@@ -411,7 +473,7 @@ export default function LandingPage() {
             >
               <div>
                 <h2 style={{ fontSize: 28, fontWeight: 800, color: "#111827", marginBottom: 4 }}>
-                  Peluang Unggulan
+                  Peluang Unggulan Weaven
                 </h2>
                 <p style={{ fontSize: 14, color: "#6b7280" }}>
                   Proyek terverifikasi yang siap untuk aksesi atau pendanaan.
@@ -473,11 +535,11 @@ export default function LandingPage() {
                   marginBottom: 16,
                 }}
               >
-                Kenapa kami lebih transparan?
+                Kenapa Weaven Lebih Transparan & Aman?
               </h2>
               <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7, marginBottom: 32 }}>
-                Kepercayaan adalah mata uang utama dalam investasi dan kemitraan.
-                VentureBridge menerapkan standar verifikasi institusional.
+                Kepercayaan adalah fondasi utama dalam merajut kemitraan modal dan bisnis.
+                Weaven menerapkan standar verifikasi institusional dan perlindungan data yang ketat.
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -485,20 +547,20 @@ export default function LandingPage() {
                   {
                     icon: <Shield size={20} color="#2563eb" />,
                     bg: "#eff6ff",
-                    title: "KYC & Due Diligence Dasar",
-                    desc: "Setiap investor dan bisnis diverifikasi identitas dan latar belakang profesionalnya.",
+                    title: "KYC & Due Diligence Terstruktur",
+                    desc: "Setiap investor dan founder diverifikasi identitas dan latar belakang profesionalnya.",
                   },
                   {
                     icon: <CheckCircle size={20} color="#16a34a" />,
                     bg: "#f0fdf4",
-                    title: "#Mosi Verifikasi Pendidikan",
-                    desc: 'Proyek yang ditandai "Terverifikasi Kampus" diketahui oleh inkubator universitas terkemuka.',
+                    title: "Verifikasi Ekosistem & Kampus",
+                    desc: 'Proyek yang ditandai "Terverifikasi" melewati kurasi inkubator dan mitra terpercaya.',
                   },
                   {
                     icon: <FileText size={20} color="#7c3aed" />,
                     bg: "#faf5ff",
-                    title: "NDA Terintegrasi",
-                    desc: "Perlindungan kekayaan intelektual (NDA) otomatis melalui smart NDA sebelum akses data sensitif diberikan.",
+                    title: "Smart NDA Otomatis",
+                    desc: "Perlindungan kekayaan intelektual (NDA) otomatis sebelum akses data sensitif pitch deck diberikan.",
                   },
                 ].map((item) => (
                   <div key={item.title} style={{ display: "flex", gap: 16 }}>
@@ -546,8 +608,8 @@ export default function LandingPage() {
                   >
                     <Rocket size={14} color="#fff" />
                   </div>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>VentureBridge</span>
-                  <span style={{ fontSize: 13, color: "#9ca3af" }}>Beranda</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>Weaven</span>
+                  <span style={{ fontSize: 13, color: "#9ca3af" }}>Ecosystem Network</span>
                 </div>
 
                 <div
@@ -564,11 +626,11 @@ export default function LandingPage() {
                   {/* Abstract network visualization */}
                   <div style={{ position: "relative", width: 160, height: 160 }}>
                     {[
-                      { x: 80, y: 80, size: 48, label: "VB" },
-                      { x: 20, y: 30, size: 32, label: "F" },
-                      { x: 130, y: 25, size: 28, label: "I" },
-                      { x: 140, y: 130, size: 30, label: "M" },
-                      { x: 15, y: 130, size: 26, label: "C" },
+                      { x: 80, y: 80, size: 48, label: "WV" },
+                      { x: 20, y: 30, size: 32, label: "Idea" },
+                      { x: 130, y: 25, size: 28, label: "Capital" },
+                      { x: 140, y: 130, size: 30, label: "Talent" },
+                      { x: 15, y: 130, size: 26, label: "Asset" },
                     ].map((node) => (
                       <div
                         key={node.label}
@@ -579,14 +641,14 @@ export default function LandingPage() {
                           width: node.size,
                           height: node.size,
                           borderRadius: "50%",
-                          background: node.label === "VB" ? "#2563eb" : "#fff",
-                          border: node.label === "VB" ? "none" : "2px solid #2563eb",
+                          background: node.label === "WV" ? "#2563eb" : "#fff",
+                          border: node.label === "WV" ? "none" : "2px solid #2563eb",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: node.label === "VB" ? 14 : 11,
+                          fontSize: node.label === "WV" ? 14 : 9,
                           fontWeight: 700,
-                          color: node.label === "VB" ? "#fff" : "#2563eb",
+                          color: node.label === "WV" ? "#fff" : "#2563eb",
                           boxShadow: "0 2px 8px rgba(37,99,235,0.2)",
                           zIndex: 2,
                         }}
@@ -633,11 +695,11 @@ export default function LandingPage() {
         >
           <div style={{ maxWidth: 600, margin: "0 auto" }}>
             <h2 style={{ fontSize: 32, fontWeight: 800, color: "#fff", marginBottom: 16 }}>
-              Siap untuk memulai perjalanan Anda?
+              Siap untuk merajut venture Anda?
             </h2>
             <p style={{ fontSize: 16, color: "#9ca3af", marginBottom: 32, lineHeight: 1.6 }}>
-              Bergabunglah dengan ribuan founder, investor, dan mentor yang
-              sudah membangun masa depan bisnis Indonesia bersama VentureBridge.
+              Bergabunglah dengan ribuan founder, investor, talent, dan pemilik aset yang
+              merajut masa depan bisnis Indonesia bersama Weaven.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               {isLoggedIn ? (

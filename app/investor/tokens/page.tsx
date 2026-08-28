@@ -55,7 +55,7 @@ export default function InvestorTokensPage() {
 
   const BANK = "BCA";
   const ACCOUNT = "1234567890";
-  const HOLDER = "VentureBridge Indonesia";
+  const HOLDER = "Weaven Indonesia";
 
   function openModal() { setStep("select"); setSelectedPkg(null); setPaymentNote(""); setShowModal(true); }
   function closeModal() { setShowModal(false); setSelectedPkg(null); setStep("select"); }

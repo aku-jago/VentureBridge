@@ -24,8 +24,8 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({
-  adminName = "Admin VentureBridge",
-  adminEmail = "admin@venturebridge.id",
+  adminName = "Admin Weaven",
+  adminEmail = "admin@weaven.id",
 }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -97,7 +97,7 @@ export function AdminSidebar({
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>Admin Panel</div>
-            <div style={{ fontSize: 10, color: "#64748b" }}>VentureBridge</div>
+            <div style={{ fontSize: 10, color: "#64748b" }}>Weaven</div>
           </div>
         </Link>
 

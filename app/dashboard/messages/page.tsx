@@ -477,7 +477,7 @@ function MessagesContent() {
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
                 <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 16px", fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", gap: 6, boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
                   <ShieldCheck size={14} color="#16a34a" />
-                  Kerahasiaan komunikasi &amp; negosiasi bisnis Anda terjamin di VentureBridge.
+                  Kerahasiaan komunikasi &amp; negosiasi bisnis Anda terjamin di Weaven.
                 </div>
               </div>
 
@@ -650,7 +650,7 @@ function MessagesContent() {
             </div>
 
             <h2 style={{ fontSize: 26, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>
-              Hub Komunikasi Ekosistem VentureBridge
+              Hub Komunikasi Ekosistem Weaven
             </h2>
             <p style={{ fontSize: 14, color: "#64748b", maxWidth: 520, lineHeight: 1.6, marginBottom: 28 }}>
               Terhubung langsung dengan angel investor, founder startup, dan pemilik capex. Pilih salah satu percakapan di sebelah kiri untuk membuka ruang diskusi.
