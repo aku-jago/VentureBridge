@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MapPin, Bookmark, Users } from "lucide-react";
 import type { Opportunity } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { VerificationBadge } from "./VerificationBadge";
 import { BusinessStageBadge } from "./BusinessStageBadge";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OpportunityCardProps {
   opportunity: Opportunity;
@@ -18,10 +20,32 @@ export function OpportunityCard({
   onSave,
   isSaved = false,
 }: OpportunityCardProps) {
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const isVerified = opportunity.verificationStatus === "verified";
+
+  function handleCardClick(e: React.MouseEvent) {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      router.push(`/login?redirect=/opportunities/${opportunity.id}`);
+    } else {
+      router.push(`/opportunities/${opportunity.id}`);
+    }
+  }
+
+  function handleSaveClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      router.push(`/login?redirect=/explore`);
+      return;
+    }
+    onSave?.(opportunity.id);
+  }
 
   return (
     <div
+      onClick={handleCardClick}
       className="card card-hover"
       style={{
         padding: "16px",
@@ -62,20 +86,18 @@ export function OpportunityCard({
           </div>
 
           {/* Title */}
-          <Link href={`/opportunities/${opportunity.id}`}>
-            <h3
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: "#111827",
-                marginBottom: 4,
-                lineHeight: 1.3,
-                textDecoration: "none",
-              }}
-            >
-              {opportunity.title}
-            </h3>
-          </Link>
+          <h3
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              color: "#111827",
+              marginBottom: 4,
+              lineHeight: 1.3,
+              textDecoration: "none",
+            }}
+          >
+            {opportunity.title}
+          </h3>
 
           {/* Description */}
           <p
@@ -95,10 +117,7 @@ export function OpportunityCard({
 
         {/* Save Button */}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            onSave?.(opportunity.id);
-          }}
+          onClick={handleSaveClick}
           style={{
             background: "none",
             border: "none",

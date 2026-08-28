@@ -16,8 +16,10 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { Footer } from "@/components/layout/Footer";
+import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { VerificationBadge } from "@/components/venturebridge/VerificationBadge";
 import { BusinessStageBadge } from "@/components/venturebridge/BusinessStageBadge";
 import { mockOpportunities } from "@/data/mock";
@@ -30,10 +32,11 @@ export default function OpportunityDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
   const opportunity = mockOpportunities.find((o) => o.id === id) ?? mockOpportunities[0];
   const { isOpportunityUnlocked, unlockOpportunity, investorBalance, tokenUnlockCost } = useToken();
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useAuth();
 
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [ndaAccepted, setNdaAccepted] = useState(false);
@@ -49,7 +52,10 @@ export default function OpportunityDetailPage({
   const isInvestor = user?.role === "investor" || user?.role === "capex_provider";
 
   function handleClickAccess() {
-    if (!user) { setShowAccessModal(true); return; }
+    if (!user || !isLoggedIn) {
+      router.push(`/login?redirect=/opportunities/${opportunity.id}`);
+      return;
+    }
     if (isInvestor) {
       // Investors use token system
       setShowUnlockModal(true);
@@ -78,25 +84,21 @@ export default function OpportunityDetailPage({
     setShowAccessModal(false);
   }
 
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f8f9fa" }}>
-      <TopNavBar />
-
-      <div
-        style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          width: "100%",
-          padding: "32px 24px",
-        }}
-      >
-        {/* Breadcrumb */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 24, fontSize: 13 }}>
-          <Link href="/explore" style={{ color: "#6b7280", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-            <ArrowLeft size={14} />
-            Kembali ke Explore
-          </Link>
-        </div>
+  const detailBody = (
+    <div
+      style={{
+        maxWidth: 1280,
+        margin: "0 auto",
+        width: "100%",
+      }}
+    >
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 24, fontSize: 13 }}>
+        <Link href="/explore" style={{ color: "#6b7280", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+          <ArrowLeft size={14} />
+          Kembali ke Explore
+        </Link>
+      </div>
 
         <div
           style={{
@@ -349,8 +351,11 @@ export default function OpportunityDetailPage({
             </div>
           </div>
         </div>
-      </div>
+    </div>
+  );
 
+  const modals = (
+    <>
       {/* Token Unlock Modal (for investors) */}
       {showUnlockModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24, backdropFilter: "blur(4px)" }}
@@ -428,7 +433,7 @@ export default function OpportunityDetailPage({
         </div>
       )}
 
-      {/* Old Access Request Modal (for non-investors) */}
+      {/* Access Request Modal */}
       {showAccessModal && (
         <div
           style={{
@@ -441,28 +446,56 @@ export default function OpportunityDetailPage({
             zIndex: 1000,
             padding: 24,
           }}
-          onClick={(e) => e.target === e.currentTarget && setShowAccessModal(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAccessModal(false);
+          }}
         >
           <div
+            className="card"
             style={{
-              background: "#fff",
-              borderRadius: 16,
-              padding: "28px",
               width: "100%",
               maxWidth: 480,
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
+              padding: "28px",
+              boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)",
             }}
           >
             {/* Modal Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>
-                Minta Akses Informasi
-              </h2>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 20,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    background: "#eff6ff",
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Shield size={18} color="#2563eb" />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>
+                    Minta Akses Detail
+                  </h2>
+                  <div style={{ fontSize: 12, color: "#6b7280" }}>
+                    {opportunity.title}
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={() => setShowAccessModal(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 4 }}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
@@ -556,7 +589,28 @@ export default function OpportunityDetailPage({
           </div>
         </div>
       )}
+    </>
+  );
 
+  if (isLoggedIn) {
+    return (
+      <div className="dashboard-layout">
+        <DashboardSidebar />
+        <main className="dashboard-content" style={{ padding: "32px 36px" }}>
+          {detailBody}
+          {modals}
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f8f9fa" }}>
+      <TopNavBar />
+      <div style={{ maxWidth: 1280, margin: "0 auto", width: "100%", padding: "32px 24px", flex: 1 }}>
+        {detailBody}
+        {modals}
+      </div>
       <Footer />
     </div>
   );

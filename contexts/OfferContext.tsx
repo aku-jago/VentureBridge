@@ -61,23 +61,30 @@ export function OfferProvider({ children }: { children: ReactNode }) {
   const [allOffers, setAllOffers] = useState<InboundOffer[]>([]);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("vb_inbound_offers");
-      if (saved) {
-        setAllOffers(JSON.parse(saved));
-      } else {
+    function loadOffers() {
+      try {
+        const saved = localStorage.getItem("vb_inbound_offers");
+        if (saved) {
+          setAllOffers(JSON.parse(saved));
+        } else {
+          setAllOffers(INITIAL_OFFERS);
+          localStorage.setItem("vb_inbound_offers", JSON.stringify(INITIAL_OFFERS));
+        }
+      } catch {
         setAllOffers(INITIAL_OFFERS);
-        localStorage.setItem("vb_inbound_offers", JSON.stringify(INITIAL_OFFERS));
       }
-    } catch {
-      setAllOffers(INITIAL_OFFERS);
     }
+
+    loadOffers();
+    window.addEventListener("storage", loadOffers);
+    return () => window.removeEventListener("storage", loadOffers);
   }, []);
 
   function persist(data: InboundOffer[]) {
     setAllOffers(data);
     try {
       localStorage.setItem("vb_inbound_offers", JSON.stringify(data));
+      window.dispatchEvent(new Event("storage"));
     } catch {}
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AccessRequest } from "@/types";
 import { VerificationBadge } from "./VerificationBadge";
 import { MessageSquare } from "lucide-react";
@@ -19,6 +19,11 @@ export function AccessRequestCard({
   onViewConversation,
 }: AccessRequestCardProps) {
   const [status, setStatus] = useState(request.status);
+
+  // Sync internal state if props change
+  useEffect(() => {
+    setStatus(request.status);
+  }, [request.status]);
 
   function handleApprove() {
     setStatus("approved");

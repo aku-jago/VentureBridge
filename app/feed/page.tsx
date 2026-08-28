@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Heart,
   MessageSquare,
@@ -146,6 +147,7 @@ const INITIAL_POSTS: Post[] = [
 ];
 
 export default function FeedPage() {
+  const router = useRouter();
   const { user, isLoggedIn } = useAuth();
   const { sendOffer } = useOffer();
 
@@ -182,6 +184,10 @@ export default function FeedPage() {
 
   function handleCreatePost(e: React.FormEvent) {
     e.preventDefault();
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/feed");
+      return;
+    }
     if (!newContent.trim()) return;
 
     const authorName = user?.name || "Pengguna";
@@ -222,6 +228,10 @@ export default function FeedPage() {
   }
 
   function toggleLike(id: string) {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/feed");
+      return;
+    }
     persistPosts(
       posts.map((p) =>
         p.id === id
@@ -232,12 +242,20 @@ export default function FeedPage() {
   }
 
   function toggleSave(id: string) {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/feed");
+      return;
+    }
     persistPosts(
       posts.map((p) => (p.id === id ? { ...p, isSaved: !p.isSaved } : p))
     );
   }
 
   function openReachOut(post: Post) {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/feed");
+      return;
+    }
     setReachOutTarget(post);
     setReachOutType(post.postType === "capex_request" ? "capex" : "idea");
     setReachOutTitle(
@@ -347,6 +365,10 @@ export default function FeedPage() {
             </div>
             <button
               onClick={() => {
+                if (!isLoggedIn) {
+                  router.push("/login?redirect=/feed");
+                  return;
+                }
                 if (user?.role === "investor") {
                   setNewPostType("capex_request");
                 }
@@ -453,13 +475,22 @@ export default function FeedPage() {
               >
                 {/* Post Author Row */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <div 
+                    onClick={() => {
+                      if (!isLoggedIn || !user) {
+                        router.push("/login?redirect=/feed");
+                        return;
+                      }
+                      router.push(`/profile/${post.author.id}`);
+                    }}
+                    style={{ display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}
+                  >
                     <div
                       style={{
                         width: 44,
                         height: 44,
                         borderRadius: "50%",
-                        background: post.author.avatarColor || "#2563eb",
+                        background: post.author.avatarColor || (post.author.role === "investor" ? "#16a34a" : "#2563eb"),
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -473,7 +504,7 @@ export default function FeedPage() {
                     </div>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
                           {post.author.name}
                         </span>
                         {post.author.isVerified && (
@@ -572,6 +603,12 @@ export default function FeedPage() {
 
                     {/* Comment */}
                     <button
+                      onClick={() => {
+                        if (!isLoggedIn || !user) {
+                          router.push("/login?redirect=/feed");
+                          return;
+                        }
+                      }}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -608,7 +645,14 @@ export default function FeedPage() {
                   {/* Reach Out CTA: ONLY for posts that do NOT belong to the current user */}
                   {!isMyPost && isInvestorPost && (
                     <button
-                      onClick={() => openReachOut(post)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isLoggedIn || !user) {
+                          router.push("/login?redirect=/feed");
+                          return;
+                        }
+                        openReachOut(post);
+                      }}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -710,7 +754,7 @@ export default function FeedPage() {
       )}
 
       {/* CREATE POST MODAL */}
-      {showCreateModal && (
+      {isLoggedIn && user && showCreateModal && (
         <div
           style={{
             position: "fixed",
@@ -883,7 +927,7 @@ export default function FeedPage() {
       )}
 
       {/* REACH OUT / OFFER MODAL */}
-      {reachOutTarget && (
+      {isLoggedIn && user && reachOutTarget && (
         <div
           style={{
             position: "fixed",

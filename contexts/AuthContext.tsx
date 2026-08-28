@@ -168,14 +168,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setAccounts(currentDb);
 
-      // 2. Load active session
+      // 2. Load active session & merge with fresh database account
       const explicitLogout = localStorage.getItem("vb_logged_out");
       const storedUser = localStorage.getItem("vb_user");
 
       if (explicitLogout === "true") {
         setUser(null);
       } else if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        const fresh = currentDb.find(
+          (a) => a.id === parsed.id || (a.email && parsed.email && a.email.toLowerCase() === parsed.email.toLowerCase())
+        );
+        const finalUser = fresh ? { ...parsed, ...fresh } : parsed;
+        setUser(finalUser);
+        try {
+          localStorage.setItem("vb_user", JSON.stringify(finalUser));
+        } catch {}
       } else {
         setUser(null);
       }
@@ -221,11 +229,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
               localStorage.setItem("vb_database_accounts", JSON.stringify(merged));
             } catch {}
+
+            // Also refresh active user if matched
+            setUser((curr) => {
+              if (!curr) return null;
+              const match = merged.find((m) => m.id === curr.id || (m.email && curr.email && m.email.toLowerCase() === curr.email.toLowerCase()));
+              if (match) {
+                const updated = { ...curr, ...match };
+                try {
+                  localStorage.setItem("vb_user", JSON.stringify(updated));
+                } catch {}
+                return updated;
+              }
+              return curr;
+            });
+
             return merged;
           });
         }
       });
     }
+  }, []);
+
+  // Listen to cross-tab updates on accounts database
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key === "vb_database_accounts" && e.newValue) {
+        try {
+          const freshDb: AuthUser[] = JSON.parse(e.newValue);
+          setAccounts(freshDb);
+          setUser((curr) => {
+            if (!curr) return null;
+            const match = freshDb.find((m) => m.id === curr.id || (m.email && curr.email && m.email.toLowerCase() === curr.email.toLowerCase()));
+            if (match) {
+              const updated = { ...curr, ...match };
+              try {
+                localStorage.setItem("vb_user", JSON.stringify(updated));
+              } catch {}
+              return updated;
+            }
+            return curr;
+          });
+        } catch {}
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   function persistAccounts(updatedAccounts: AuthUser[]) {
@@ -256,6 +305,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return prevUser;
     });
+
+    // Also update raw localStorage vb_user in case active tab is admin
+    try {
+      const rawUser = localStorage.getItem("vb_user");
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser);
+        if (parsed.id === userId) {
+          localStorage.setItem("vb_user", JSON.stringify({ ...parsed, ...updates }));
+        }
+      }
+    } catch {}
 
     if (isSupabaseConfigured && supabase) {
       const dbUpdates: Record<string, any> = {};

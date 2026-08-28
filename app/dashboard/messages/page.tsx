@@ -29,7 +29,7 @@ import { useAuth, AuthUser } from "@/contexts/AuthContext";
 
 function MessagesContent() {
   const searchParams = useSearchParams();
-  const targetUserIdParam = searchParams.get("to");
+  const targetUserIdParam = searchParams.get("to") || searchParams.get("userId") || searchParams.get("user");
 
   const { user, accounts } = useAuth();
   const {
@@ -58,13 +58,20 @@ function MessagesContent() {
   const prevMsgCountRef = useRef<number>(0);
   const isUserScrolledUpRef = useRef<boolean>(false);
 
-  // If ?to= query parameter is explicitly provided, open that chat immediately
+  // If query parameter is explicitly provided, open or start that chat immediately
   useEffect(() => {
     if (targetUserIdParam && targetUserIdParam !== currentUserId) {
+      const existingThread = threads.find((t) => t.id === targetUserIdParam);
+      if (!existingThread) {
+        const targetAcc = accounts.find((a) => a.id === targetUserIdParam);
+        if (targetAcc) {
+          startOrOpenThread(targetAcc);
+        }
+      }
       setActiveOtherUserId(targetUserIdParam);
       markThreadAsRead(targetUserIdParam);
     }
-  }, [targetUserIdParam, currentUserId]);
+  }, [targetUserIdParam, currentUserId, threads, accounts, startOrOpenThread, markThreadAsRead]);
 
   const activeThread = threads.find((t) => t.id === activeOtherUserId) || null;
   const currentMessages = activeOtherUserId ? getMessagesWithUser(activeOtherUserId) : [];

@@ -59,6 +59,7 @@ interface TokenContextType {
   confirmTopUp: (topUpId: string) => void;
   rejectTopUp: (topUpId: string) => void;
   processWithdraw: (withdrawId: string) => void;
+  rejectWithdraw: (withdrawId: string) => void;
 }
 
 const TokenContext = createContext<TokenContextType>({
@@ -81,6 +82,7 @@ const TokenContext = createContext<TokenContextType>({
   confirmTopUp: () => {},
   rejectTopUp: () => {},
   processWithdraw: () => {},
+  rejectWithdraw: () => {},
 });
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -151,8 +153,8 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const investorBalance = user?.tokenBalance ?? 120;
-  const founderBalance = user?.founderTokenBalance ?? 20;
+  const investorBalance = user?.tokenBalance ?? 0;
+  const founderBalance = (user?.tokenBalance ?? 0) + (user?.founderTokenBalance ?? 0);
   const pendingTopUps = allTopUpRequests.filter(
     (r) => r.userId === user?.id && r.status === "waiting"
   );
@@ -317,17 +319,40 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     ): { success: boolean; message: string } => {
       if (!user) return { success: false, message: "Silakan login terlebih dahulu." };
 
-      const currentFounderBalance = user.founderTokenBalance ?? founderBalance;
+      const totalAvailableBalance = (user.tokenBalance ?? 0) + (user.founderTokenBalance ?? 0);
 
-      if (currentFounderBalance < tokens) {
+      if (tokens <= 0) {
         return {
           success: false,
-          message: `Saldo token founder tidak cukup. Saldo kamu: ${currentFounderBalance} token.`,
+          message: "Masukkan jumlah token yang valid.",
         };
       }
 
-      const newBalance = currentFounderBalance - tokens;
-      updateProfile({ founderTokenBalance: newBalance });
+      if (tokens > totalAvailableBalance) {
+        return {
+          success: false,
+          message: `Saldo token tidak cukup. Saldo kamu: ${totalAvailableBalance} token.`,
+        };
+      }
+
+      const currentFndBal = user.founderTokenBalance ?? 0;
+      const currentTopUpBal = user.tokenBalance ?? 0;
+      const deductFnd = Math.min(tokens, currentFndBal);
+      const deductTopUp = tokens - deductFnd;
+
+      const newFndBal = currentFndBal - deductFnd;
+      const newTopUpBal = currentTopUpBal - deductTopUp;
+
+      updateProfile({
+        tokenBalance: newTopUpBal,
+        founderTokenBalance: newFndBal,
+      });
+      if (user.id) {
+        updateUserAccount(user.id, {
+          tokenBalance: newTopUpBal,
+          founderTokenBalance: newFndBal,
+        });
+      }
 
       const estimatedRupiah = tokens * TOKEN_RUPIAH_VALUE;
 
@@ -383,7 +408,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
         message: `Permintaan withdraw ${tokens} token (≈ Rp ${estimatedRupiah.toLocaleString("id-ID")}) berhasil dikirim.`,
       };
     },
-    [user, founderBalance, founderTransactions, allWithdrawRequests, updateProfile]
+    [user, founderTransactions, allWithdrawRequests, updateProfile, updateUserAccount]
   );
 
   const confirmTopUp = useCallback(
@@ -487,6 +512,43 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     [allWithdrawRequests, founderTransactions]
   );
 
+  const rejectWithdraw = useCallback(
+    (withdrawId: string) => {
+      const request = allWithdrawRequests.find((r) => r.id === withdrawId);
+      if (!request) return;
+
+      // Refund the tokens back to the user
+      const targetUser = accounts.find((a) => a.id === request.founderId);
+      const prevBal = targetUser?.tokenBalance ?? 0;
+      const newBal = prevBal + request.tokens;
+
+      updateUserAccount(request.founderId, { tokenBalance: newBal });
+      if (user?.id === request.founderId) {
+        updateProfile({ tokenBalance: newBal });
+      }
+
+      const updated = allWithdrawRequests.map((r) =>
+        r.id === withdrawId ? { ...r, status: "rejected" as const } : r
+      );
+      setAllWithdrawRequests(updated);
+      setWithdrawRequests(updated);
+      saveToStorage("vb_withdraw_requests", updated);
+
+      const updatedFndTxns = founderTransactions.map((t) =>
+        t.type === "withdraw_pending" && t.status === "pending"
+          ? { ...t, type: "withdraw" as const, status: "rejected" as const }
+          : t
+      );
+      setFounderTransactions(updatedFndTxns);
+      saveToStorage("vb_founder_transactions", updatedFndTxns);
+
+      if (isSupabaseConfigured && supabase) {
+        supabase.from("withdraw_requests").update({ status: "rejected" }).eq("id", withdrawId).then();
+      }
+    },
+    [allWithdrawRequests, accounts, user, updateProfile, updateUserAccount, founderTransactions]
+  );
+
   return (
     <TokenContext.Provider
       value={{
@@ -509,6 +571,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
         confirmTopUp,
         rejectTopUp,
         processWithdraw,
+        rejectWithdraw,
       }}
     >
       {children}

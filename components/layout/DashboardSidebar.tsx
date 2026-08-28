@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -51,6 +52,33 @@ export function DashboardSidebar({
   const { pendingOffersCount } = useOffer();
   const { totalUnreadCount } = useChat();
 
+  const [pendingAccessCount, setPendingAccessCount] = useState(0);
+
+  useEffect(() => {
+    function calculatePending() {
+      try {
+        const stored = localStorage.getItem("vb_access_requests");
+        if (stored) {
+          const reqs = JSON.parse(stored);
+          const pending = reqs.filter((r: any) => r.status === "pending").length;
+          setPendingAccessCount(pending);
+        } else {
+          if (user?.id === "user-1" || !user?.id) {
+            setPendingAccessCount(2);
+          } else {
+            setPendingAccessCount(0);
+          }
+        }
+      } catch {
+        setPendingAccessCount(0);
+      }
+    }
+
+    calculatePending();
+    window.addEventListener("storage", calculatePending);
+    return () => window.removeEventListener("storage", calculatePending);
+  }, [user]);
+
   const role = propRole || user?.role || "founder";
   const name = user?.name || propName || "Idea Founder";
   const title = user?.title || propTitle || (role === "investor" ? "Investor / Modal" : "Idea Founder");
@@ -87,7 +115,7 @@ export function DashboardSidebar({
   const founderLinks: SidebarLink[] = [
     { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { href: "/dashboard/listings", label: "My Listings", icon: <ListChecks size={18} /> },
-    { href: "/dashboard/access-requests", label: "Access Requests", icon: <FileText size={18} />, badge: 5 },
+    { href: "/dashboard/access-requests", label: "Access Requests", icon: <FileText size={18} />, badge: pendingAccessCount > 0 ? pendingAccessCount : undefined },
     { href: "/explore", label: "Explore", icon: <Compass size={18} /> },
     { href: "/dashboard/matches", label: "Matches AI", icon: <Handshake size={18} /> },
     { href: "/feed", label: "Feed Komunitas", icon: <Rss size={18} /> },
@@ -96,7 +124,7 @@ export function DashboardSidebar({
     { href: "/dashboard/verification", label: "Verifikasi Bisnis", icon: <FileText size={18} /> },
     {
       href: "/founder/tokens",
-      label: `Token Wallet (${founderBalance || investorBalance})`,
+      label: `Token Wallet (${founderBalance})`,
       icon: <Coins size={18} />,
     },
   ];

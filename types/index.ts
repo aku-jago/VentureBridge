@@ -42,7 +42,7 @@ export interface TokenTransaction {
   relatedUserId?: string;
   relatedUserName?: string;
   createdAt: string;
-  status: "completed" | "pending" | "failed";
+  status: "completed" | "pending" | "failed" | "rejected";
 }
 
 export interface TopUpRequest {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Bot, Sparkles, Inbox } from "lucide-react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { AccessRequestCard } from "@/components/venturebridge/AccessRequestCard";
@@ -10,6 +11,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { AccessRequest } from "@/types";
 
 export default function AccessRequestsPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [activeTab, setActiveTab] = useState<"pending" | "disetujui" | "ditolak">("pending");
@@ -21,8 +23,7 @@ export default function AccessRequestsPage() {
     try {
       const stored = localStorage.getItem("vb_access_requests");
       if (stored) {
-        const all: AccessRequest[] = JSON.parse(stored);
-        userRequests = all;
+        userRequests = JSON.parse(stored);
       } else {
         // Initial fallback: only Dzakki (user-1) has default seed requests
         if (currentUserId === "user-1") {
@@ -66,7 +67,26 @@ export default function AccessRequestsPage() {
               isHighMatch: (d.match_score || 90) >= 90,
               requesterType: "investor",
             }));
-            setRequests(remoteReqs);
+
+            // Merge safely: preserve local approved/rejected statuses
+            setRequests((prev) => {
+              const merged = [...prev];
+              remoteReqs.forEach((rem) => {
+                const idx = merged.findIndex((m) => m.id === rem.id);
+                if (idx >= 0) {
+                  // Keep local status if already decided
+                  if (merged[idx].status === "pending") {
+                    merged[idx] = rem;
+                  }
+                } else {
+                  merged.push(rem);
+                }
+              });
+              try {
+                localStorage.setItem("vb_access_requests", JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
           }
         });
     }
@@ -83,6 +103,7 @@ export default function AccessRequestsPage() {
     setRequests(updated);
     try {
       localStorage.setItem("vb_access_requests", JSON.stringify(updated));
+      window.dispatchEvent(new Event("storage"));
     } catch {}
 
     if (isSupabaseConfigured && supabase) {
@@ -97,6 +118,7 @@ export default function AccessRequestsPage() {
     setRequests(updated);
     try {
       localStorage.setItem("vb_access_requests", JSON.stringify(updated));
+      window.dispatchEvent(new Event("storage"));
     } catch {}
 
     if (isSupabaseConfigured && supabase) {
@@ -224,6 +246,9 @@ export default function AccessRequestsPage() {
                     request={request}
                     onApprove={handleApprove}
                     onReject={handleReject}
+                    onViewConversation={() => {
+                      router.push(`/dashboard/messages?to=${request.requester.id || request.requesterId}`);
+                    }}
                   />
                 ))
               )}

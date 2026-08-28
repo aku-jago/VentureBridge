@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { useToken } from "@/contexts/TokenContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { TokenPackage, TokenTransaction } from "@/types";
 import {
   Coins,
@@ -31,36 +32,87 @@ function formatDate(dateStr: string) {
 function TxnRow({ txn }: { txn: TokenTransaction }) {
   const isPositive = txn.amount > 0;
   const isPending = txn.status === "pending";
+  const isRejected = txn.status === "rejected";
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 0", borderBottom: "1px solid #f3f4f6" }}>
-      <div style={{ width: 38, height: 38, borderRadius: "50%", background: isPending ? "#f3f4f6" : isPositive ? "#f0fdf4" : "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        {isPending ? <Clock size={18} color="#9ca3af" /> : isPositive ? <ArrowDownLeft size={18} color="#16a34a" /> : <ArrowUpRight size={18} color="#d97706" />}
+    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 0", borderBottom: "1px solid #f3f4f6" }}>
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: "50%",
+          background: isPending ? "#fffbeb" : isRejected ? "#fef2f2" : isPositive ? "#f0fdf4" : "#eff6ff",
+          border: isPending ? "1px solid #fde68a" : isRejected ? "1px solid #fecaca" : isPositive ? "1px solid #bbf7d0" : "1px solid #bfdbfe",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {isPending ? (
+          <Clock size={18} color="#d97706" />
+        ) : isRejected ? (
+          <X size={18} color="#dc2626" />
+        ) : isPositive ? (
+          <ArrowDownLeft size={18} color="#16a34a" />
+        ) : (
+          <ArrowUpRight size={18} color="#2563eb" />
+        )}
       </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{txn.description}</div>
-        {txn.relatedUserName && <div style={{ fontSize: 12, color: "#6b7280" }}>dari {txn.relatedUserName} • {txn.relatedOpportunityTitle}</div>}
-        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{formatDate(txn.createdAt)}</div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{txn.description}</span>
+          {isPending && (
+            <span style={{ fontSize: 10, padding: "2px 8px", background: "#fffbeb", color: "#b45309", borderRadius: 999, fontWeight: 700, border: "1px solid #fde68a", display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <Clock size={10} /> Menunggu Admin
+            </span>
+          )}
+          {isRejected && (
+            <span style={{ fontSize: 10, padding: "2px 8px", background: "#fef2f2", color: "#dc2626", borderRadius: 999, fontWeight: 700, border: "1px solid #fecaca" }}>
+              Ditolak
+            </span>
+          )}
+          {!isPending && !isRejected && (
+            <span style={{ fontSize: 10, padding: "2px 8px", background: "#f0fdf4", color: "#16a34a", borderRadius: 999, fontWeight: 700, border: "1px solid #bbf7d0" }}>
+              ✓ Berhasil
+            </span>
+          )}
+        </div>
+        {txn.relatedUserName && (
+          <div style={{ fontSize: 12, color: "#6b7280" }}>
+            dari {txn.relatedUserName} • {txn.relatedOpportunityTitle}
+          </div>
+        )}
+        <div style={{ fontSize: 11, color: "#9ca3af" }}>{formatDate(txn.createdAt)}</div>
       </div>
-      <div style={{ textAlign: "right" }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: isPending ? "#9ca3af" : isPositive ? "#16a34a" : "#d97706" }}>
+
+      <div style={{ textAlign: "right", flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: isPending ? "#d97706" : isRejected ? "#9ca3af" : isPositive ? "#16a34a" : "#2563eb" }}>
           {isPositive ? "+" : ""}{txn.amount} token
         </div>
-        {isPending && <div style={{ fontSize: 11, color: "#9ca3af" }}>Menunggu</div>}
+        <div style={{ fontSize: 11, color: isPending ? "#b45309" : "#9ca3af", marginTop: 2 }}>
+          {isPending ? "Sedang Diproses" : isRejected ? "Dibatalkan" : "Selesai"}
+        </div>
       </div>
     </div>
   );
 }
 
 export default function FounderTokensPage() {
+  const { user } = useAuth();
   const {
     founderBalance,
-    investorBalance,
     founderTransactions,
+    investorTransactions,
     withdrawRequests,
     requestWithdraw,
     tokenRupiahValue,
     tokenPackages,
     requestTopUp,
+    allTopUpRequests,
+    allWithdrawRequests,
+    pendingTopUps,
   } = useToken();
 
   // Withdraw Modal state
@@ -84,9 +136,47 @@ export default function FounderTokensPage() {
   const ACCOUNT = "1234567890";
   const HOLDER = "Weaven Indonesia";
 
-  const totalEarned = founderTransactions.filter(t => t.type === "receive").reduce((s, t) => s + t.amount, 0);
-  const totalWithdrawn = Math.abs(founderTransactions.filter(t => t.type === "withdraw" || t.type === "withdraw_pending").reduce((s, t) => s + t.amount, 0));
-  const uniqueInvestors = new Set(founderTransactions.filter(t => t.type === "receive").map(t => t.relatedUserId)).size;
+  // Build combined transactions including pending/confirmed top-ups and withdraws
+  const userTopUpTxns: TokenTransaction[] = allTopUpRequests
+    .filter((r) => r.userId === user?.id)
+    .map((r) => ({
+      id: `topup-req-${r.id}`,
+      userId: r.userId,
+      type: "topup" as const,
+      amount: r.tokens,
+      description: `Top Up Paket ${r.packageName}${r.status === "waiting" ? " (Menunggu Konfirmasi Admin)" : ""}`,
+      createdAt: r.confirmedAt || r.requestedAt,
+      status: r.status === "waiting" ? ("pending" as const) : r.status === "confirmed" ? ("completed" as const) : ("rejected" as const),
+    }));
+
+  const userWithdrawTxns: TokenTransaction[] = allWithdrawRequests
+    .filter((w) => w.founderId === user?.id)
+    .map((w) => ({
+      id: `withdraw-req-${w.id}`,
+      userId: w.founderId,
+      type: "withdraw" as const,
+      amount: -w.tokens,
+      description: `Penarikan Dana ke ${w.bankName} (${w.accountNumber})${w.status === "pending" ? " (Sedang Diproses Admin)" : ""}`,
+      createdAt: w.processedAt || w.requestedAt,
+      status: w.status === "pending" ? ("pending" as const) : w.status === "processed" ? ("completed" as const) : ("rejected" as const),
+    }));
+
+  const userDirectTxns = [
+    ...founderTransactions.filter((t) => t.userId === user?.id || !t.userId),
+    ...investorTransactions.filter((t) => t.userId === user?.id),
+  ];
+
+  const allDisplayTransactions: TokenTransaction[] = [
+    ...userTopUpTxns,
+    ...userWithdrawTxns,
+    ...userDirectTxns,
+  ]
+    .filter((item, index, self) => index === self.findIndex((t) => t.id === item.id))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const totalEarned = allDisplayTransactions.filter(t => (t.type === "receive" || t.type === "topup") && t.status === "completed").reduce((s, t) => s + t.amount, 0);
+  const totalWithdrawn = Math.abs(allDisplayTransactions.filter(t => t.type === "withdraw" && t.status === "completed").reduce((s, t) => s + t.amount, 0));
+  const uniqueInvestors = new Set(allDisplayTransactions.filter(t => t.type === "receive").map(t => t.relatedUserId)).size;
 
   function handleWithdrawSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,8 +188,11 @@ export default function FounderTokensPage() {
     if (!accountName) { setWithdrawError("Masukkan nama pemilik rekening."); return; }
     const result = requestWithdraw(Number(withdrawTokens), bankName, accountNumber, accountName);
     setWithdrawMsg(result.message);
-    if (result.success) setWithdrawStep("done");
-    else setWithdrawError(result.message);
+    if (result.success) {
+      setWithdrawStep("done");
+    } else {
+      setWithdrawError(result.message);
+    }
   }
 
   function closeWithdrawModal() {
@@ -110,8 +203,8 @@ export default function FounderTokensPage() {
   }
 
   function openTopUpModal() {
+    setSelectedPkg(tokenPackages[1] || tokenPackages[0]);
     setTopUpStep("select");
-    setSelectedPkg(null);
     setPaymentNote("");
     setShowTopUpModal(true);
   }
@@ -120,6 +213,7 @@ export default function FounderTokensPage() {
     setShowTopUpModal(false);
     setSelectedPkg(null);
     setTopUpStep("select");
+    setPaymentNote("");
   }
 
   function handleCopy() {
@@ -158,9 +252,9 @@ export default function FounderTokensPage() {
                 <Coins size={20} color="rgba(255,255,255,0.8)" />
                 <span style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>Saldo Token Anda</span>
               </div>
-              <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1 }}>{founderBalance || investorBalance || 0}</div>
+              <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1 }}>{founderBalance}</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", marginTop: 6 }}>
-                token ≈ {formatRupiah((founderBalance || investorBalance || 0) * tokenRupiahValue)}
+                token ≈ {formatRupiah(founderBalance * tokenRupiahValue)}
               </div>
             </div>
 
@@ -187,7 +281,11 @@ export default function FounderTokensPage() {
               </button>
 
               <button
-                onClick={() => setShowWithdrawModal(true)}
+                onClick={() => {
+                  setWithdrawTokens(founderBalance);
+                  setWithdrawError("");
+                  setShowWithdrawModal(true);
+                }}
                 disabled={founderBalance === 0}
                 style={{
                   display: "flex",
@@ -221,6 +319,16 @@ export default function FounderTokensPage() {
             ))}
           </div>
         </div>
+
+        {pendingTopUps.length > 0 && (
+          <div style={{ background: "#eff6ff", border: "1px solid #93c5fd", borderRadius: 12, padding: "16px 20px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+            <Clock size={20} color="#2563eb" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1e40af" }}>{pendingTopUps.length} permintaan Top Up sedang menunggu konfirmasi Admin</div>
+              <div style={{ fontSize: 12, color: "#1e3a8a" }}>Token akan langsung masuk ke saldo Anda segera setelah transfer diverifikasi.</div>
+            </div>
+          </div>
+        )}
 
         {pendingWithdraws.length > 0 && (
           <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 12, padding: "16px 20px", marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
@@ -271,10 +379,10 @@ export default function FounderTokensPage() {
         {/* Transaction History */}
         <div className="card" style={{ background: "#fff", borderRadius: 16, padding: "24px", border: "1px solid #e5e7eb" }}>
           <h2 style={{ fontSize: 17, fontWeight: 700, color: "#111827", marginBottom: 16 }}>Riwayat Transaksi Token</h2>
-          {founderTransactions.length === 0 ? (
+          {allDisplayTransactions.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af", fontSize: 14 }}>Belum ada transaksi token.</div>
           ) : (
-            founderTransactions.map(txn => <TxnRow key={txn.id} txn={txn} />)
+            allDisplayTransactions.map(txn => <TxnRow key={txn.id} txn={txn} />)
           )}
         </div>
       </main>

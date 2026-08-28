@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useState } from "react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { useToken } from "@/contexts/TokenContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { TokenPackage, TokenTransaction } from "@/types";
 import {
   Coins,
@@ -16,6 +16,9 @@ import {
   Copy,
   Zap,
   Star,
+  Wallet,
+  TrendingUp,
+  Building2,
 } from "lucide-react";
 
 function formatRupiah(amount: number) {
@@ -26,41 +29,203 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function TransactionRow({ txn }: { txn: TokenTransaction }) {
+function TxnRow({ txn }: { txn: TokenTransaction }) {
   const isPositive = txn.amount > 0;
+  const isPending = txn.status === "pending";
+  const isRejected = txn.status === "rejected";
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 0", borderBottom: "1px solid #f3f4f6" }}>
-      <div style={{ width: 38, height: 38, borderRadius: "50%", background: isPositive ? "#f0fdf4" : "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        {isPositive ? <ArrowDownLeft size={18} color="#16a34a" /> : <ArrowUpRight size={18} color="#d97706" />}
+    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 0", borderBottom: "1px solid #f3f4f6" }}>
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: "50%",
+          background: isPending ? "#fffbeb" : isRejected ? "#fef2f2" : isPositive ? "#f0fdf4" : "#eff6ff",
+          border: isPending ? "1px solid #fde68a" : isRejected ? "1px solid #fecaca" : isPositive ? "1px solid #bbf7d0" : "1px solid #bfdbfe",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {isPending ? (
+          <Clock size={18} color="#d97706" />
+        ) : isRejected ? (
+          <X size={18} color="#dc2626" />
+        ) : isPositive ? (
+          <ArrowDownLeft size={18} color="#16a34a" />
+        ) : (
+          <ArrowUpRight size={18} color="#2563eb" />
+        )}
       </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{txn.description}</div>
-        {txn.relatedOpportunityTitle && <div style={{ fontSize: 12, color: "#6b7280" }}>{txn.relatedOpportunityTitle}</div>}
-        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{formatDate(txn.createdAt)}</div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{txn.description}</span>
+          {isPending && (
+            <span style={{ fontSize: 10, padding: "2px 8px", background: "#fffbeb", color: "#b45309", borderRadius: 999, fontWeight: 700, border: "1px solid #fde68a", display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <Clock size={10} /> Menunggu Admin
+            </span>
+          )}
+          {isRejected && (
+            <span style={{ fontSize: 10, padding: "2px 8px", background: "#fef2f2", color: "#dc2626", borderRadius: 999, fontWeight: 700, border: "1px solid #fecaca" }}>
+              Ditolak
+            </span>
+          )}
+          {!isPending && !isRejected && (
+            <span style={{ fontSize: 10, padding: "2px 8px", background: "#f0fdf4", color: "#16a34a", borderRadius: 999, fontWeight: 700, border: "1px solid #bbf7d0" }}>
+              ✓ Berhasil
+            </span>
+          )}
+        </div>
+        {txn.relatedOpportunityTitle && (
+          <div style={{ fontSize: 12, color: "#6b7280" }}>{txn.relatedOpportunityTitle}</div>
+        )}
+        <div style={{ fontSize: 11, color: "#9ca3af" }}>{formatDate(txn.createdAt)}</div>
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: isPositive ? "#16a34a" : "#d97706" }}>
-        {isPositive ? "+" : ""}{txn.amount} token
+
+      <div style={{ textAlign: "right", flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: isPending ? "#d97706" : isRejected ? "#9ca3af" : isPositive ? "#16a34a" : "#2563eb" }}>
+          {isPositive ? "+" : ""}{txn.amount} token
+        </div>
+        <div style={{ fontSize: 11, color: isPending ? "#b45309" : "#9ca3af", marginTop: 2 }}>
+          {isPending ? "Sedang Diproses" : isRejected ? "Dibatalkan" : "Selesai"}
+        </div>
       </div>
     </div>
   );
 }
 
 export default function InvestorTokensPage() {
-  const { tokenPackages, investorBalance, investorTransactions, pendingTopUps, requestTopUp, tokenUnlockCost } = useToken();
-  const [showModal, setShowModal] = useState(false);
+  const { user } = useAuth();
+  const {
+    tokenPackages,
+    investorBalance,
+    founderBalance,
+    investorTransactions,
+    founderTransactions,
+    pendingTopUps,
+    requestTopUp,
+    requestWithdraw,
+    withdrawRequests,
+    allTopUpRequests,
+    allWithdrawRequests,
+    tokenUnlockCost,
+    tokenRupiahValue,
+  } = useToken();
+
+  const totalBalance = (user?.tokenBalance ?? 0) + (user?.founderTokenBalance ?? 0);
+
+  // Top Up Modal state
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [selectedPkg, setSelectedPkg] = useState<TokenPackage | null>(null);
-  const [step, setStep] = useState<"select" | "payment" | "done">("select");
+  const [topUpStep, setTopUpStep] = useState<"select" | "payment" | "done">("select");
   const [paymentNote, setPaymentNote] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Withdraw Modal state
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawTokens, setWithdrawTokens] = useState<number | "">(totalBalance || 0);
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [withdrawStep, setWithdrawStep] = useState<"form" | "done">("form");
+  const [withdrawMsg, setWithdrawMsg] = useState("");
+  const [withdrawError, setWithdrawError] = useState("");
 
   const BANK = "BCA";
   const ACCOUNT = "1234567890";
   const HOLDER = "Weaven Indonesia";
 
-  function openModal() { setStep("select"); setSelectedPkg(null); setPaymentNote(""); setShowModal(true); }
-  function closeModal() { setShowModal(false); setSelectedPkg(null); setStep("select"); }
-  function handleCopy() { navigator.clipboard.writeText(ACCOUNT); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-  function handleSubmit() { if (!selectedPkg) return; requestTopUp(selectedPkg, paymentNote); setStep("done"); }
+  // Build combined transactions including pending/confirmed top-ups and withdraws
+  const userTopUpTxns: TokenTransaction[] = allTopUpRequests
+    .filter((r) => r.userId === user?.id)
+    .map((r) => ({
+      id: `topup-req-${r.id}`,
+      userId: r.userId,
+      type: "topup" as const,
+      amount: r.tokens,
+      description: `Top Up Paket ${r.packageName}${r.status === "waiting" ? " (Menunggu Konfirmasi Admin)" : ""}`,
+      createdAt: r.confirmedAt || r.requestedAt,
+      status: r.status === "waiting" ? ("pending" as const) : r.status === "confirmed" ? ("completed" as const) : ("rejected" as const),
+    }));
+
+  const userWithdrawTxns: TokenTransaction[] = allWithdrawRequests
+    .filter((w) => w.founderId === user?.id)
+    .map((w) => ({
+      id: `withdraw-req-${w.id}`,
+      userId: w.founderId,
+      type: "withdraw" as const,
+      amount: -w.tokens,
+      description: `Penarikan Dana ke ${w.bankName} (${w.accountNumber})${w.status === "pending" ? " (Sedang Diproses Admin)" : ""}`,
+      createdAt: w.processedAt || w.requestedAt,
+      status: w.status === "pending" ? ("pending" as const) : w.status === "processed" ? ("completed" as const) : ("rejected" as const),
+    }));
+
+  const userDirectTxns = [
+    ...investorTransactions.filter((t) => t.userId === user?.id),
+    ...founderTransactions.filter((t) => t.userId === user?.id),
+  ];
+
+  const allDisplayTransactions: TokenTransaction[] = [
+    ...userTopUpTxns,
+    ...userWithdrawTxns,
+    ...userDirectTxns,
+  ]
+    .filter((item, index, self) => index === self.findIndex((t) => t.id === item.id))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const pendingWithdraws = allWithdrawRequests.filter((r) => r.founderId === user?.id && r.status === "pending");
+
+  function openTopUpModal() {
+    setTopUpStep("select");
+    setSelectedPkg(tokenPackages[1] || tokenPackages[0]);
+    setPaymentNote("");
+    setShowTopUpModal(true);
+  }
+
+  function closeTopUpModal() {
+    setShowTopUpModal(false);
+    setSelectedPkg(null);
+    setTopUpStep("select");
+  }
+
+  function handleCopy() {
+    navigator.clipboard.writeText(ACCOUNT);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleTopUpSubmit() {
+    if (!selectedPkg) return;
+    requestTopUp(selectedPkg, paymentNote);
+    setTopUpStep("done");
+  }
+
+  function handleWithdrawSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setWithdrawError("");
+    if (!withdrawTokens || Number(withdrawTokens) <= 0) { setWithdrawError("Masukkan jumlah token yang valid."); return; }
+    if (Number(withdrawTokens) > totalBalance) { setWithdrawError("Saldo token tidak mencukupi."); return; }
+    if (!bankName) { setWithdrawError("Masukkan nama bank."); return; }
+    if (!accountNumber) { setWithdrawError("Masukkan nomor rekening."); return; }
+    if (!accountName) { setWithdrawError("Masukkan nama pemilik rekening."); return; }
+    const result = requestWithdraw(Number(withdrawTokens), bankName, accountNumber, accountName);
+    setWithdrawMsg(result.message);
+    if (result.success) {
+      setWithdrawStep("done");
+    } else {
+      setWithdrawError(result.message);
+    }
+  }
+
+  function closeWithdrawModal() {
+    setShowWithdrawModal(false);
+    setWithdrawStep("form");
+    setBankName(""); setAccountNumber(""); setAccountName("");
+    setWithdrawTokens(totalBalance); setWithdrawError(""); setWithdrawMsg("");
+  }
 
   return (
     <div className="dashboard-layout">
@@ -68,46 +233,105 @@ export default function InvestorTokensPage() {
       <main className="dashboard-content">
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: "#111827", marginBottom: 4 }}>Token Wallet</h1>
-          <p style={{ fontSize: 14, color: "#6b7280" }}>Kelola saldo token untuk mengakses detail ide bisnis founder.</p>
+          <p style={{ fontSize: 14, color: "#6b7280" }}>Kelola saldo token untuk membuka peluang ide bisnis (Top Up) atau mencairkan saldo (Withdraw).</p>
         </div>
 
         {/* Balance Hero Card */}
         <div style={{ background: "linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)", borderRadius: 20, padding: "32px", marginBottom: 28, color: "#fff", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
           <div style={{ position: "absolute", bottom: -20, right: 60, width: 80, height: 80, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", position: "relative" }}>
+
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", position: "relative", flexWrap: "wrap", gap: 16 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <Coins size={20} color="rgba(255,255,255,0.8)" />
-                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>Saldo Token Saya</span>
+                <span style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>Saldo Token Anda</span>
               </div>
-              <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1 }}>{investorBalance}</div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 6 }}>token tersedia • biaya akses: {tokenUnlockCost} token / ide bisnis</div>
+              <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1 }}>{totalBalance}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", marginTop: 6 }}>
+                token ≈ {formatRupiah(totalBalance * tokenRupiahValue)} • biaya akses: {tokenUnlockCost} token / ide
+              </div>
             </div>
-            <button onClick={openModal} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              <Plus size={16} /> Top Up Token
-            </button>
+
+            {/* Action Buttons */}
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={openTopUpModal}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "12px 20px",
+                  background: "#fff",
+                  border: "none",
+                  borderRadius: 12,
+                  color: "#1e40af",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Plus size={16} /> Top Up Token
+              </button>
+
+              <button
+                onClick={() => {
+                  setWithdrawTokens(totalBalance);
+                  setWithdrawError("");
+                  setShowWithdrawModal(true);
+                }}
+                disabled={totalBalance === 0}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "12px 20px",
+                  background: totalBalance > 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  borderRadius: 12,
+                  color: totalBalance > 0 ? "#fff" : "rgba(255,255,255,0.4)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: totalBalance > 0 ? "pointer" : "not-allowed",
+                }}
+              >
+                <Wallet size={16} /> Withdraw Token
+              </button>
+            </div>
           </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginTop: 24, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
             {[
-              { label: "Total Top Up", value: investorTransactions.filter(t => t.type === "topup").reduce((s, t) => s + t.amount, 0) + " token" },
-              { label: "Ide Diakses", value: investorTransactions.filter(t => t.type === "unlock").length + " bisnis" },
-              { label: "Token Digunakan", value: Math.abs(investorTransactions.filter(t => t.type === "unlock").reduce((s, t) => s + t.amount, 0)) + " token" },
+              { label: "Total Top Up", value: allDisplayTransactions.filter(t => t.type === "topup" && t.status === "completed").reduce((s, t) => s + t.amount, 0) + " token", icon: <TrendingUp size={14} /> },
+              { label: "Ide Diakses", value: allDisplayTransactions.filter(t => t.type === "unlock").length + " bisnis", icon: <Building2 size={14} /> },
+              { label: "Token Digunakan", value: Math.abs(allDisplayTransactions.filter(t => t.type === "unlock").reduce((s, t) => s + t.amount, 0)) + " token", icon: <ArrowUpRight size={14} /> },
             ].map(s => (
               <div key={s.label}>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>{s.icon}{s.label}</div>
                 <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Pending Banners */}
         {pendingTopUps.length > 0 && (
+          <div style={{ background: "#eff6ff", border: "1px solid #93c5fd", borderRadius: 12, padding: "16px 20px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+            <Clock size={20} color="#2563eb" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1e40af" }}>{pendingTopUps.length} permintaan Top Up sedang menunggu konfirmasi Admin</div>
+              <div style={{ fontSize: 12, color: "#1e3a8a" }}>Token akan langsung masuk ke saldo Anda segera setelah transfer diverifikasi.</div>
+            </div>
+          </div>
+        )}
+
+        {pendingWithdraws.length > 0 && (
           <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 12, padding: "16px 20px", marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
             <Clock size={20} color="#d97706" style={{ flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#92400e" }}>{pendingTopUps.length} top up menunggu konfirmasi admin</div>
-              <div style={{ fontSize: 12, color: "#78350f" }}>Token akan ditambahkan setelah pembayaran dikonfirmasi.</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#92400e" }}>{pendingWithdraws.length} permintaan withdraw sedang diproses</div>
+              <div style={{ fontSize: 12, color: "#78350f" }}>Dana akan dikirim ke rekening Anda dalam 1-3 hari kerja.</div>
             </div>
           </div>
         )}
@@ -115,10 +339,15 @@ export default function InvestorTokensPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           {/* Packages */}
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 16 }}>Paket Top Up Token</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>Pilihan Paket Top Up</h2>
+              <button onClick={openTopUpModal} style={{ fontSize: 13, fontWeight: 700, color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>
+                Beli Sekarang →
+              </button>
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {tokenPackages.map(pkg => (
-                <div key={pkg.id} onClick={() => { setSelectedPkg(pkg); setShowModal(true); setStep("select"); }}
+                <div key={pkg.id} onClick={() => { setSelectedPkg(pkg); setShowTopUpModal(true); setTopUpStep("select"); }}
                   style={{ background: "#fff", border: pkg.isPopular ? "2px solid #2563eb" : "1px solid #e5e7eb", borderRadius: 14, padding: "16px 20px", cursor: "pointer", position: "relative", transition: "box-shadow 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.boxShadow = "0 4px 16px rgba(37,99,235,0.12)"}
                   onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
@@ -153,113 +382,239 @@ export default function InvestorTokensPage() {
 
           {/* Transactions */}
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 16 }}>Riwayat Transaksi</h2>
-            <div className="card" style={{ padding: "8px 20px" }}>
-              {investorTransactions.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: 14 }}>Belum ada transaksi</div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", marginBottom: 16 }}>Riwayat Transaksi Token</h2>
+            <div className="card" style={{ background: "#fff", borderRadius: 16, padding: "8px 20px", border: "1px solid #e5e7eb" }}>
+              {allDisplayTransactions.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "#9ca3af", fontSize: 14 }}>Belum ada transaksi token.</div>
               ) : (
-                investorTransactions.map(txn => <TransactionRow key={txn.id} txn={txn} />)
+                allDisplayTransactions.map(txn => <TxnRow key={txn.id} txn={txn} />)
               )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* Modal */}
-      {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24, backdropFilter: "blur(4px)" }}
-          onClick={e => e.target === e.currentTarget && closeModal()}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: "28px", width: "100%", maxWidth: 480, boxShadow: "0 8px 40px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>
-                {step === "select" ? "Pilih Paket Token" : step === "payment" ? "Instruksi Pembayaran" : "Permintaan Terkirim!"}
-              </h2>
-              <button onClick={closeModal} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><X size={20} /></button>
+      {/* TOP UP MODAL */}
+      {showTopUpModal && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeTopUpModal(); }}
+        >
+          <div style={{ background: "#fff", borderRadius: 20, width: "100%", maxWidth: 500, padding: "24px 28px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>
+                {topUpStep === "select" ? "Pilih Paket Top Up Token" : topUpStep === "payment" ? "Instruksi Pembayaran" : "Permintaan Terkirim!"}
+              </div>
+              <button onClick={closeTopUpModal} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={16} />
+              </button>
             </div>
 
-            {step === "select" && (
-              <>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-                  {tokenPackages.map(pkg => (
-                    <div key={pkg.id} onClick={() => setSelectedPkg(pkg)}
-                      style={{ border: selectedPkg?.id === pkg.id ? "2px solid #2563eb" : "1px solid #e5e7eb", borderRadius: 12, padding: "14px 16px", cursor: "pointer", background: selectedPkg?.id === pkg.id ? "#eff6ff" : "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.15s" }}>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
-                          {pkg.name} — {pkg.tokens} token
-                          {pkg.isPopular && <span style={{ marginLeft: 8, fontSize: 10, background: "#2563eb", color: "#fff", padding: "1px 6px", borderRadius: 4 }}>POPULER</span>}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#6b7280" }}>Akses {Math.floor(pkg.tokens / tokenUnlockCost)} ide bisnis</div>
-                      </div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>{formatRupiah(pkg.price)}</div>
+            {topUpStep === "select" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {tokenPackages.map((pkg) => (
+                  <button
+                    key={pkg.id}
+                    onClick={() => { setSelectedPkg(pkg); setTopUpStep("payment"); }}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "14px 18px",
+                      borderRadius: 12,
+                      border: pkg.isPopular ? "2px solid #2563eb" : "1px solid #e5e7eb",
+                      background: "#fff",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{pkg.name}</div>
+                      <div style={{ fontSize: 12, color: "#6b7280" }}>Dapatkan <strong>{pkg.tokens} Token</strong></div>
                     </div>
-                  ))}
-                </div>
-                <button onClick={() => setStep("payment")} disabled={!selectedPkg}
-                  style={{ width: "100%", padding: "12px", background: selectedPkg ? "#2563eb" : "#e5e7eb", color: selectedPkg ? "#fff" : "#9ca3af", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: selectedPkg ? "pointer" : "not-allowed" }}>
-                  Lanjut ke Pembayaran
-                </button>
-              </>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#2563eb" }}>
+                      {formatRupiah(pkg.price)}
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
 
-            {step === "payment" && selectedPkg && (
-              <>
-                <div style={{ background: "#f8faff", border: "1px solid #bfdbfe", borderRadius: 14, padding: "20px", marginBottom: 20 }}>
-                  <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>Transfer ke rekening berikut:</div>
-                  <div style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 12, color: "#9ca3af" }}>Bank</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{BANK}</div>
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 12, color: "#9ca3af" }}>No. Rekening</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: "#2563eb", letterSpacing: "0.05em" }}>{ACCOUNT}</div>
-                      <button onClick={handleCopy} style={{ background: copied ? "#f0fdf4" : "#eff6ff", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: copied ? "#16a34a" : "#2563eb" }}>
-                        {copied ? <CheckCircle size={12} /> : <Copy size={12} />} {copied ? "Tersalin!" : "Salin"}
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, color: "#9ca3af" }}>Atas Nama</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{HOLDER}</div>
-                  </div>
-                  <div style={{ background: "#1e40af", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ color: "rgba(255,255,255,0.8)", fontSize: 13 }}>Jumlah Transfer</div>
-                    <div style={{ color: "#fff", fontSize: 18, fontWeight: 800 }}>{formatRupiah(selectedPkg.price)}</div>
-                  </div>
+            {topUpStep === "payment" && selectedPkg && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: "14px 16px" }}>
+                  <div style={{ fontSize: 12, color: "#1e40af", fontWeight: 600, marginBottom: 2 }}>Paket yang Dipilih:</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>{selectedPkg.name} — {selectedPkg.tokens} Token</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: "#2563eb", marginTop: 4 }}>{formatRupiah(selectedPkg.price)}</div>
                 </div>
 
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 8 }}>Catatan Bukti Pembayaran (opsional)</label>
-                  <textarea value={paymentNote} onChange={e => setPaymentNote(e.target.value)}
-                    placeholder="Contoh: Transfer via BCA Mobile jam 14:30..."
-                    rows={3}
-                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, color: "#111827", resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+                {/* Transfer Info */}
+                <div style={{ background: "#0f172a", borderRadius: 12, padding: "16px", color: "#fff" }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em", marginBottom: 6 }}>
+                    Transfer ke Rekening Resmi Weaven:
+                  </div>
+                  <div style={{ fontSize: 13, color: "#94a3b8" }}>Bank {BANK}</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "6px 0" }}>
+                    <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: "0.05em" }}>{ACCOUNT}</div>
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      style={{ padding: "6px 12px", background: copied ? "#16a34a" : "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                    >
+                      {copied ? <CheckCircle size={13} /> : <Copy size={13} />}
+                      {copied ? "Tersalin!" : "Salin"}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#cbd5e1" }}>a.n. {HOLDER}</div>
                 </div>
 
-                <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 10, padding: "12px 14px", marginBottom: 20, fontSize: 12, color: "#78350f", lineHeight: 1.5 }}>
-                  <strong>⏱ Proses konfirmasi:</strong> Admin akan memverifikasi pembayaranmu dalam 1×24 jam kerja.
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>
+                    Catatan Bukti Transfer (opsional):
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={paymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
+                    placeholder="Contoh: Sudah transfer via BCA Mobile jam 14:30..."
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                  />
                 </div>
 
                 <div style={{ display: "flex", gap: 10 }}>
-                  <button onClick={() => setStep("select")} style={{ flex: 1, padding: "12px", background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Kembali</button>
-                  <button onClick={handleSubmit} style={{ flex: 2, padding: "12px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                    <Zap size={16} /> Sudah Transfer, Konfirmasi!
+                  <button type="button" onClick={() => setTopUpStep("select")} style={{ flex: 1, padding: "11px", background: "#f3f4f6", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    Kembali
+                  </button>
+                  <button type="button" onClick={handleTopUpSubmit} style={{ flex: 2, padding: "11px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                    Sudah Transfer — Kirim
                   </button>
                 </div>
-              </>
+              </div>
             )}
 
-            {step === "done" && selectedPkg && (
-              <div style={{ textAlign: "center", padding: "20px 0" }}>
-                <div style={{ width: 72, height: 72, background: "#f0fdf4", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                  <CheckCircle size={36} color="#16a34a" />
+            {topUpStep === "done" && (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <CheckCircle size={48} color="#16a34a" style={{ margin: "0 auto 12px" }} />
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#111827", marginBottom: 6 }}>
+                  Permintaan Top Up Berhasil Dikirim!
                 </div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: "#111827", marginBottom: 8 }}>Permintaan Top Up Terkirim!</h3>
-                <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, marginBottom: 24 }}>
-                  Permintaan top up <strong>{selectedPkg.tokens} token</strong> ({formatRupiah(selectedPkg.price)}) telah diterima.
-                  Token akan ditambahkan setelah admin mengkonfirmasi pembayaran.
+                <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5, marginBottom: 20 }}>
+                  Admin kami akan segera memverifikasi transfer Anda. Token akan masuk ke saldo Anda secara otomatis setelah dikonfirmasi.
                 </p>
-                <button onClick={closeModal} style={{ padding: "12px 32px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Tutup</button>
+                <button onClick={closeTopUpModal} style={{ padding: "10px 24px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Selesai
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* WITHDRAW MODAL */}
+      {showWithdrawModal && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeWithdrawModal(); }}
+        >
+          <div style={{ background: "#fff", borderRadius: 20, width: "100%", maxWidth: 480, padding: "24px 28px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>
+                {withdrawStep === "form" ? "Tarik Saldo Token (Withdraw)" : "Permintaan Terkirim"}
+              </div>
+              <button onClick={closeWithdrawModal} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            {withdrawStep === "form" ? (
+              <form onSubmit={handleWithdrawSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {withdrawError && (
+                  <div style={{ padding: "10px 12px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, fontSize: 13, color: "#dc2626" }}>
+                    ⚠️ {withdrawError}
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5 }}>
+                    Jumlah Token yang Ingin Ditarik (Maks: {totalBalance})
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={totalBalance}
+                    value={withdrawTokens}
+                    onChange={(e) => setWithdrawTokens(e.target.value === "" ? "" : Number(e.target.value))}
+                    required
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                  />
+                  {typeof withdrawTokens === "number" && withdrawTokens > 0 && (
+                    <div style={{ fontSize: 12, color: "#2563eb", marginTop: 4, fontWeight: 600 }}>
+                      Estimasi yang didapatkan: {formatRupiah(withdrawTokens * tokenRupiahValue)}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5 }}>
+                    Nama Bank Tujuan
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: BCA / Mandiri / BNI / GoPay / OVO"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5 }}>
+                    Nomor Rekening / E-Wallet
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="1234567890"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "block", marginBottom: 5 }}>
+                    Nama Pemilik Rekening
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Sesuai buku tabungan"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  style={{ marginTop: 8, padding: "12px", background: "linear-gradient(135deg, #1e40af, #7c3aed)", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+                >
+                  Ajukan Penarikan Dana
+                </button>
+              </form>
+            ) : (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <CheckCircle size={48} color="#16a34a" style={{ margin: "0 auto 12px" }} />
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#111827", marginBottom: 6 }}>
+                  {withdrawMsg || "Permintaan Withdraw Berhasil Diajukan!"}
+                </div>
+                <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5, marginBottom: 20 }}>
+                  Admin akan mentransfer dana ke rekening Anda dalam 1-3 hari kerja.
+                </p>
+                <button onClick={closeWithdrawModal} style={{ padding: "10px 24px", background: "#1e40af", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Tutup
+                </button>
               </div>
             )}
           </div>
@@ -268,4 +623,3 @@ export default function InvestorTokensPage() {
     </div>
   );
 }
-

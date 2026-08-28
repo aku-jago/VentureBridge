@@ -48,7 +48,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function AdminTokensPage() {
-  const { allTopUpRequests, allWithdrawRequests, confirmTopUp, rejectTopUp, processWithdraw, tokenRupiahValue } = useToken();
+  const { allTopUpRequests, allWithdrawRequests, confirmTopUp, rejectTopUp, processWithdraw, rejectWithdraw, tokenRupiahValue } = useToken();
   const [activeTab, setActiveTab] = useState<"topup" | "withdraw">("topup");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
@@ -210,14 +210,29 @@ export default function AdminTokensPage() {
                     )}
                   </div>
                   {req.status === "pending" && (
-                    <button onClick={() => processWithdraw(req.id)}
-                      style={{ padding: "8px 16px", background: "#065f46", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                      <CheckCircle size={14} /> Tandai Selesai
-                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => rejectWithdraw(req.id)}
+                        style={{ padding: "8px 14px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fca5a5", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                      >
+                        <XCircle size={14} /> Tolak
+                      </button>
+                      <button
+                        onClick={() => processWithdraw(req.id)}
+                        style={{ padding: "8px 16px", background: "#065f46", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                      >
+                        <CheckCircle size={14} /> Tandai Selesai
+                      </button>
+                    </div>
                   )}
                   {req.status === "processed" && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#16a34a", fontSize: 13, fontWeight: 600 }}>
                       <CheckCircle size={16} /> Selesai
+                    </div>
+                  )}
+                  {req.status === "rejected" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#dc2626", fontSize: 13, fontWeight: 600 }}>
+                      <XCircle size={16} /> Ditolak
                     </div>
                   )}
                 </div>

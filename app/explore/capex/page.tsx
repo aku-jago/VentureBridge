@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Filter, ArrowLeft, Zap, MapPin, Building2, Maximize2, ChevronLeft, ChevronRight, CheckCircle, Clock } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { Footer } from "@/components/layout/Footer";
@@ -40,11 +41,13 @@ function CapexCard({
   isSponsored,
   isMine,
   onBoost,
+  onContact,
 }: {
   listing: typeof mockCapexListings[0];
   isSponsored: boolean;
   isMine: boolean;
   onBoost: () => void;
+  onContact: () => void;
 }) {
   const capexInfo = CAPEX_TYPES.find((c) => c.value === listing.capexType);
   const suffix = listing.capexType === "rent" ? "/bulan" : "";
@@ -143,7 +146,13 @@ function CapexCard({
               <Zap size={12} /> Boost
             </button>
           )}
-          <button style={{ padding: "7px 14px", background: "#f5f3ff", color: "#7c3aed", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onContact();
+            }}
+            style={{ padding: "7px 14px", background: "#f5f3ff", color: "#7c3aed", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+          >
             Hubungi
           </button>
         </div>
@@ -161,6 +170,7 @@ function CapexCard({
 }
 
 export default function ExploreCapexPage() {
+  const router = useRouter();
   const { user, isLoggedIn } = useAuth();
   const { boostedListingIds } = useAds();
 
@@ -172,6 +182,23 @@ export default function ExploreCapexPage() {
   const [adsTarget, setAdsTarget] = useState<{ id: string; title: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 4;
+
+  function handleContact() {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/explore/capex");
+      return;
+    }
+    router.push("/dashboard/messages");
+  }
+
+  function handleBoost(id: string, title: string) {
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/explore/capex");
+      return;
+    }
+    setAdsTarget({ id, title });
+    setShowAdsModal(true);
+  }
 
   function toggle<T>(arr: T[], item: T): T[] {
     return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
@@ -314,7 +341,7 @@ export default function ExploreCapexPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {boosted.map((c) => (
-                <CapexCard key={c.id} listing={c} isSponsored isMine={user?.id === c.ownerId} onBoost={() => { setAdsTarget({ id: c.id, title: c.title }); setShowAdsModal(true); }} />
+                <CapexCard key={c.id} listing={c} isSponsored isMine={user?.id === c.ownerId} onBoost={() => handleBoost(c.id, c.title)} onContact={handleContact} />
               ))}
             </div>
             <div style={{ height: 1, background: "#e2e8f0", margin: "20px 0" }} />
@@ -330,7 +357,7 @@ export default function ExploreCapexPage() {
         )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           {paged.map((c) => (
-            <CapexCard key={c.id} listing={c} isSponsored={false} isMine={user?.id === c.ownerId} onBoost={() => { setAdsTarget({ id: c.id, title: c.title }); setShowAdsModal(true); }} />
+            <CapexCard key={c.id} listing={c} isSponsored={false} isMine={user?.id === c.ownerId} onBoost={() => handleBoost(c.id, c.title)} onContact={handleContact} />
           ))}
         </div>
 

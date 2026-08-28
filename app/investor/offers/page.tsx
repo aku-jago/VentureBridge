@@ -333,7 +333,7 @@ export default function InvestorOffersPage() {
 
                       {isAccepted && (
                         <Link
-                          href="/dashboard/messages"
+                          href={`/dashboard/messages?to=${offer.senderId}`}
                           style={{
                             display: "flex",
                             alignItems: "center",
