@@ -89,49 +89,6 @@ const ROLE_LABEL: Record<ActiveRole, { label: string; color: string; bg: string;
 };
 
 const MOCK_PROFILES: Record<string, MockProfile> = {
-  "user-2": {
-    id: "user-2",
-    name: "Budi Santoso",
-    initials: "BS",
-    headline: "Managing Partner @ Nusantara Capital | Early-Stage Investor | EdTech & AgriTech Enthusiast",
-    title: "Managing Partner",
-    company: "Nusantara Capital",
-    location: "Jakarta, Indonesia",
-    bio: "Saya passionate dalam memberdayakan generasi founder Indonesia berikutnya yang memecahkan masalah nyata melalui teknologi yang scalable.\n\nDengan background di early-stage operations dan corporate M&A, saya membawa lebih dari sekadar modal. Filosofi investasi saya adalah founder-first — saya mencari grit, pemahaman pasar yang dalam, dan kesiapan untuk pivot saat diperlukan.\n\nSaya biasanya lead rounds namun juga terbuka untuk co-invest dengan syndicate terpercaya.",
-    avatarColor: "#16a34a",
-    isVerified: true,
-    roles: ["investor", "founder"],
-    joinedAt: "Juni 2023",
-    connections: 312,
-    investorData: {
-      ticketRange: "Rp 100jt – Rp 500jt",
-      sectors: ["EdTech", "AgriTech", "SaaS B2B", "F&B Innovation"],
-      stages: ["Pre-Seed", "Seed"],
-      activeInvestments: 12,
-      totalDeals: 28,
-      philosophy: "Founder-first. Saya mencari grit, pemahaman pasar yang dalam, dan kesiapan untuk pivot. Tim yang solid dengan domain expertise kuat adalah prioritas utama saya.",
-      portfolio: [
-        { company: "PinterAcademy", sector: "EdTech SaaS", stage: "Series A", status: "Active" },
-        { company: "AgriKultur F&B", sector: "Supply Chain", stage: "Seed", status: "Exited ✓" },
-        { company: "KopiNusantara", sector: "F&B D2C", stage: "Pre-Seed", status: "Active" },
-      ],
-      affiliations: [
-        { org: "ANGIN Network", role: "Verified Member since 2021", verified: true },
-        { org: "East Ventures Alumni", role: "Former EIR", verified: true },
-        { org: "UI Incubator", role: "Official Mentor", verified: false },
-      ],
-    },
-    posts: [
-      {
-        id: "p1",
-        type: "💰 Pendanaan",
-        content: "🔍 Investment Thesis Update: Kami sedang aktif mencari startup di sektor AgriTech dan EdTech tahap Pre-Seed hingga Seed. Ticket: Rp 100jt - Rp 500jt untuk initial investment.",
-        likes: 89,
-        comments: 34,
-        date: "5 jam yang lalu",
-      },
-    ],
-  },
   "user-1": {
     id: "user-1",
     name: "Dzakki Naufal",
@@ -163,8 +120,8 @@ const MOCK_PROFILES: Record<string, MockProfile> = {
       },
     ],
   },
-  "user-3": {
-    id: "user-3",
+  "user-2": {
+    id: "user-2",
     name: "Siti Rahmawati",
     initials: "SR",
     headline: "Co-Founder Candidate | Ex-Gojek & Traveloka | Product Manager | Open to Partner",
@@ -193,23 +150,23 @@ const MOCK_PROFILES: Record<string, MockProfile> = {
       },
     ],
   },
-  "user-4": {
-    id: "user-4",
+  "user-3": {
+    id: "user-3",
     name: "Andi Wijaya",
     initials: "AW",
-    headline: "Syndicate Lead @ East Ventures | AgriTech & FinTech Investor | Market Analyst",
-    title: "Syndicate Lead",
-    company: "East Ventures",
+    headline: "Angel Investor & Syndicate Lead @ East Ventures | AgriTech & FinTech Investor",
+    title: "Angel Investor & Syndicate Lead",
+    company: "East Ventures Syndicate",
     location: "Jakarta, Indonesia",
-    bio: "Early-stage investor dengan fokus di sektor AgriTech dan FinTech. Percaya bahwa Indonesia memiliki potensi besar di kedua sektor ini, terutama dengan meningkatnya penetrasi smartphone di pedesaan.",
-    avatarColor: "#dc2626",
+    bio: "Early-stage investor dengan fokus di sektor AgriTech, EdTech, dan FinTech. Membantu early-stage founder mencapai product-market fit dan membuka jaringan strategis di Indonesia & regional.",
+    avatarColor: "#16a34a",
     isVerified: true,
     roles: ["investor", "capex_provider"],
     joinedAt: "November 2023",
     connections: 428,
     investorData: {
-      ticketRange: "Rp 50jt – Rp 250jt",
-      sectors: ["AgriTech", "FinTech", "Marketplace"],
+      ticketRange: "Rp 100jt – Rp 500jt",
+      sectors: ["AgriTech", "FinTech", "EdTech", "Marketplace"],
       stages: ["Pre-Seed", "Seed", "Early Stage"],
       activeInvestments: 8,
       totalDeals: 15,
@@ -234,42 +191,98 @@ const MOCK_PROFILES: Record<string, MockProfile> = {
       },
     ],
   },
+  "user-4": {
+    id: "user-4",
+    name: "Budi Santoso",
+    initials: "BS",
+    headline: "Managing Partner @ Nusantara Capital | Early-Stage Investor",
+    title: "Managing Partner",
+    company: "Nusantara Capital",
+    location: "Jakarta, Indonesia",
+    bio: "Saya passionate dalam memberdayakan generasi founder Indonesia berikutnya yang memecahkan masalah nyata melalui teknologi yang scalable.",
+    avatarColor: "#16a34a",
+    isVerified: true,
+    roles: ["investor", "founder"],
+    joinedAt: "Juni 2023",
+    connections: 312,
+    investorData: {
+      ticketRange: "Rp 100jt – Rp 500jt",
+      sectors: ["EdTech", "AgriTech", "SaaS B2B"],
+      stages: ["Pre-Seed", "Seed"],
+      activeInvestments: 12,
+      totalDeals: 28,
+      philosophy: "Founder-first.",
+      portfolio: [
+        { company: "PinterAcademy", sector: "EdTech SaaS", stage: "Series A", status: "Active" },
+      ],
+      affiliations: [
+        { org: "ANGIN Network", role: "Verified Member", verified: true },
+      ],
+    },
+    posts: [],
+  },
 };
 
 export default function PublicProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const { user: currentUser, isLoggedIn } = useAuth();
+  const { user: currentUser, accounts, isLoggedIn } = useAuth();
   const [showFullBio, setShowFullBio] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [showPrivateData, setShowPrivateData] = useState(false);
 
   const userId = params.userId as string;
 
-  // If viewing own profile, show self
-  const isOwnProfile = currentUser?.id === userId;
-  const profile: MockProfile | null =
-    MOCK_PROFILES[userId] ||
-    (isOwnProfile && currentUser
-      ? {
-          id: currentUser.id || "me",
-          name: currentUser.name,
-          initials: currentUser.initials,
-          headline: currentUser.headline || currentUser.title,
-          title: currentUser.title,
-          company: currentUser.company,
-          location: currentUser.location || "Indonesia",
-          bio: currentUser.bio || "Belum ada bio. Edit profil Anda untuk menambahkan informasi.",
-          avatarColor: currentUser.avatarColor || "#2563eb",
-          avatarUrl: currentUser.avatarUrl || currentUser.avatar,
-          bannerUrl: currentUser.bannerUrl,
-          isVerified: currentUser.isVerified || false,
-          roles: (currentUser.roles as ActiveRole[]) || ["founder"],
-          joinedAt: "Baru bergabung",
-          connections: 0,
-          posts: [],
-        }
-      : null);
+  // Check if viewing own profile
+  const isOwnProfile = userId === "me" || (currentUser?.id && currentUser.id === userId);
+
+  // Resolve profile: Own Profile -> Accounts DB -> Mock
+  let profile: MockProfile | null = null;
+
+  if (isOwnProfile && currentUser) {
+    profile = {
+      id: currentUser.id || "me",
+      name: currentUser.name,
+      initials: currentUser.initials,
+      headline: currentUser.headline || currentUser.title,
+      title: currentUser.title,
+      company: currentUser.company,
+      location: currentUser.location || "Indonesia",
+      bio: currentUser.bio || "Belum ada bio. Edit profil Anda untuk menambahkan informasi.",
+      avatarColor: currentUser.avatarColor || (currentUser.role === "investor" ? "#16a34a" : "#2563eb"),
+      avatarUrl: currentUser.avatarUrl,
+      bannerUrl: currentUser.bannerUrl,
+      isVerified: currentUser.isVerified || false,
+      roles: (currentUser.roles as ActiveRole[]) || [currentUser.role as ActiveRole],
+      joinedAt: "Aktif di Weaven",
+      connections: 187,
+      posts: [],
+    };
+  } else {
+    const matchedAccount = accounts.find((a) => a.id === userId);
+    if (matchedAccount) {
+      profile = {
+        id: matchedAccount.id || userId,
+        name: matchedAccount.name,
+        initials: matchedAccount.initials,
+        headline: matchedAccount.headline || matchedAccount.title,
+        title: matchedAccount.title,
+        company: matchedAccount.company,
+        location: matchedAccount.location || "Indonesia",
+        bio: matchedAccount.bio || "Pengguna terverifikasi Weaven.",
+        avatarColor: matchedAccount.avatarColor || (matchedAccount.role === "investor" ? "#16a34a" : "#2563eb"),
+        avatarUrl: matchedAccount.avatarUrl,
+        bannerUrl: matchedAccount.bannerUrl,
+        isVerified: matchedAccount.isVerified || false,
+        roles: (matchedAccount.roles as ActiveRole[]) || [matchedAccount.role as ActiveRole],
+        joinedAt: "Aktif di Weaven",
+        connections: 120,
+        posts: [],
+      };
+    } else if (MOCK_PROFILES[userId]) {
+      profile = MOCK_PROFILES[userId];
+    }
+  }
 
   if (!profile) {
     return (
