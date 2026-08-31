@@ -120,6 +120,7 @@ export default function RegisterPage() {
       </Link>
 
       <div
+        className="register-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(0, 380px) minmax(0, 420px)",
@@ -489,6 +490,18 @@ export default function RegisterPage() {
       {showGoogleModal && (
         <GoogleAuthModal onClose={() => setShowGoogleModal(false)} mode="register" />
       )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .register-grid {
+            grid-template-columns: 1fr !important;
+            max-width: 100% !important;
+          }
+          .register-grid > div:first-child {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

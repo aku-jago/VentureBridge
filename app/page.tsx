@@ -40,8 +40,10 @@ export default function LandingPage() {
             background: "#fff",
             padding: "72px 24px 80px",
           }}
+          className="hero-section"
         >
           <div
+            className="hero-grid"
             style={{
               maxWidth: 1280,
               margin: "0 auto",
@@ -292,8 +294,9 @@ export default function LandingPage() {
         {/* ============================
             BRAND PHILOSOPHY & NARRATIVE
             ============================ */}
-        <section style={{ padding: "64px 24px", background: "#f8f9fa" }}>
+        <section style={{ padding: "64px 24px", background: "#f8f9fa" }} className="section-padding-md">
           <div
+            className="problem-grid"
             style={{
               maxWidth: 1280,
               margin: "0 auto",
@@ -398,6 +401,7 @@ export default function LandingPage() {
             </p>
 
             <div
+              className="steps-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
@@ -497,6 +501,7 @@ export default function LandingPage() {
             </div>
 
             <div
+              className="opportunities-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
@@ -516,6 +521,7 @@ export default function LandingPage() {
             ============================ */}
         <section style={{ padding: "64px 24px", background: "#fff" }}>
           <div
+            className="transparent-grid"
             style={{
               maxWidth: 1280,
               margin: "0 auto",
@@ -772,15 +778,25 @@ export default function LandingPage() {
       {/* Responsive Styles */}
       <style>{`
         @media (max-width: 1024px) {
-          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
           .steps-grid { grid-template-columns: 1fr 1fr !important; }
           .opportunities-grid { grid-template-columns: 1fr 1fr !important; }
-          .transparent-grid { grid-template-columns: 1fr !important; }
+          .transparent-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
           .problem-grid { grid-template-columns: 1fr !important; }
+          .hero-section { padding: 40px 16px 48px !important; }
         }
-        @media (max-width: 640px) {
-          .steps-grid { grid-template-columns: 1fr !important; }
-          .opportunities-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 768px) {
+          .hero-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .hero-grid > :last-child { display: none !important; }
+          .hero-section { padding: 32px 16px 40px !important; }
+          .steps-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .opportunities-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .transparent-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+          .problem-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .section-padding-md { padding: 40px 16px !important; }
+        }
+        @media (max-width: 480px) {
+          .hero-section { padding: 24px 16px 32px !important; }
         }
       `}</style>
     </div>

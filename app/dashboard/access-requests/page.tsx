@@ -139,6 +139,7 @@ export default function AccessRequestsPage() {
 
       <main className="dashboard-content">
         <div
+          className="access-requests-layout"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 320px",
@@ -158,6 +159,7 @@ export default function AccessRequestsPage() {
 
             {/* Stats Row */}
             <div
+              className="stats-grid-3"
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr 1fr",
@@ -410,6 +412,29 @@ export default function AccessRequestsPage() {
           </div>
         </div>
       </main>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .access-requests-layout {
+            grid-template-columns: 1fr !important;
+          }
+          .access-requests-layout > div:last-child {
+            display: none !important;
+          }
+          .stats-grid-3 {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .access-requests-layout {
+            grid-template-columns: 1fr !important;
+          }
+          .stats-grid-3 {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

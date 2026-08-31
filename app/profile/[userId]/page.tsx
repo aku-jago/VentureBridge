@@ -577,7 +577,7 @@ export default function PublicProfilePage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 20, alignItems: "start" }}>
+      <div className="profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 20, alignItems: "start" }}>
         {/* Left Column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* About */}
@@ -929,6 +929,16 @@ export default function PublicProfilePage() {
           </Link>
         </div>
       </div>
+      <style>{`
+        @media (max-width: 1024px) {
+          .profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .profile-grid > div:last-child {
+            order: -1;
+          }
+        }
+      `}</style>
     </div>
   );
 }

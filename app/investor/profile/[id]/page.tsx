@@ -60,6 +60,7 @@ export default function InvestorProfilePage({
         </div>
 
         <div
+          className="investor-profile-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 280px",
@@ -579,6 +580,17 @@ export default function InvestorProfilePage({
           </div>
         </div>
       </main>
+
+      <style>{`
+        @media (max-width: 1024px) {
+          .investor-profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .investor-profile-grid > div:last-child {
+            order: -1;
+          }
+        }
+      `}</style>
     </div>
   );
 }

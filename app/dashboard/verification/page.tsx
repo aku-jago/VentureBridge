@@ -99,6 +99,7 @@ export default function BusinessVerificationPage() {
         </p>
 
         <div
+          className="verification-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 280px",
@@ -418,6 +419,17 @@ export default function BusinessVerificationPage() {
           </div>
         </div>
       </main>
+
+      <style>{`
+        @media (max-width: 1024px) {
+          .verification-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .verification-grid > div:last-child {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

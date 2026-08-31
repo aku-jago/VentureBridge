@@ -314,15 +314,17 @@ export default function FeedPage() {
 
   const mainFeedContent = (
     <div
+      className="feed-layout"
       style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 300px",
-        gap: 28,
-        alignItems: "start",
+        display: "flex",
+        gap: 24,
+        width: "100%",
+        maxWidth: "100%",
+        boxSizing: "border-box",
       }}
     >
       {/* Main Feed Column */}
-      <div>
+      <div style={{ flex: 1, minWidth: 0, width: "100%", boxSizing: "border-box" }}>
         {/* Page Header */}
         <div style={{ marginBottom: 20 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginBottom: 4 }}>
@@ -425,7 +427,16 @@ export default function FeedPage() {
         </div>
 
         {/* Filter Pills */}
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 20 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            overflowX: "auto",
+            paddingBottom: 8,
+            marginBottom: 20,
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
           {filters.map((f) => (
             <button
               key={f.value}
@@ -440,6 +451,8 @@ export default function FeedPage() {
                 fontWeight: activeFilter === f.value ? 700 : 500,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
+                flexShrink: 0,
+                boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                 transition: "all 0.15s ease",
               }}
             >
@@ -474,7 +487,7 @@ export default function FeedPage() {
                 }}
               >
                 {/* Post Author Row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
                   <div 
                     onClick={() => {
                       if (!isLoggedIn || !user) {
@@ -483,7 +496,7 @@ export default function FeedPage() {
                       }
                       router.push(`/profile/${post.author.id}`);
                     }}
-                    style={{ display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}
+                    style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer", flex: "1 1 auto", minWidth: 0 }}
                   >
                     <div
                       style={{
@@ -678,8 +691,8 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* Right Sidebar Widgets */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Right Sidebar Widgets (Desktop Only) */}
+      <div className="feed-sidebar-desktop hidden-mobile" style={{ width: 300, flexShrink: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Trending Tags Widget */}
         <div
           className="card"
@@ -739,7 +752,7 @@ export default function FeedPage() {
       {isLoggedIn ? (
         <div className="dashboard-layout">
           <DashboardSidebar />
-          <main className="dashboard-content" style={{ padding: "32px 36px" }}>
+          <main className="dashboard-content">
             {mainFeedContent}
           </main>
         </div>
@@ -753,7 +766,20 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* CREATE POST MODAL */}
+      {/* Feed Responsive Styles */}
+      <style>{`
+        @media (max-width: 768px) {
+          .feed-layout {
+            flex-direction: column !important;
+            gap: 16px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .feed-sidebar-desktop {
+            display: none !important;
+          }
+        }
+      `}</style>
       {isLoggedIn && user && showCreateModal && (
         <div
           style={{

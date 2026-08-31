@@ -22,6 +22,7 @@ import {
   Handshake,
   ArrowRight,
   TrendingUp,
+  ArrowLeft,
 } from "lucide-react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { useChat, ChatThread, ChatMessage } from "@/contexts/ChatContext";
@@ -167,15 +168,23 @@ function MessagesContent() {
   );
 
   return (
-    <div className="dashboard-layout">
+    <div className={`dashboard-layout ${activeOtherUserId ? "in-active-chat" : ""}`}>
       <DashboardSidebar />
 
       <main
-        className="dashboard-content"
-        style={{ padding: 0, display: "flex", height: "100vh", overflow: "hidden", background: "#f8fafc" }}
+        className="dashboard-content messages-main-wrapper"
+        style={{
+          padding: 0,
+          display: "flex",
+          height: "calc(100vh - 56px)",
+          overflow: "hidden",
+          background: "#f8fafc",
+          position: "relative",
+        }}
       >
-        {/* Left Column: Conversation Sidebar */}
+        {/* Left Column: Conversation List */}
         <div
+          className={`messages-left-pane ${activeOtherUserId ? "mobile-hidden" : "mobile-full"}`}
           style={{
             width: 360,
             borderRight: "1px solid #e2e8f0",
@@ -183,6 +192,7 @@ function MessagesContent() {
             display: "flex",
             flexDirection: "column",
             flexShrink: 0,
+            height: "100%",
           }}
         >
           {/* Header */}
@@ -394,31 +404,70 @@ function MessagesContent() {
           </div>
         </div>
 
-        {/* Right Column: Chat Room or VentureBridge Empty State */}
+        {/* Right Column: Chat Room or Empty State */}
         {activeThread ? (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f8fafc" }}>
-            {/* Header */}
+          <div
+            className={`messages-right-pane ${activeOtherUserId ? "mobile-full" : "mobile-hidden"}`}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              background: "#f8fafc",
+              height: "100%",
+              maxHeight: "100%",
+              overflow: "hidden",
+            }}
+          >
+            {/* Header (Sticky / Locked Top) */}
             <div
+              className="chat-room-header"
               style={{
-                padding: "14px 24px",
+                padding: "10px 14px",
                 background: "#fff",
                 borderBottom: "1px solid #e2e8f0",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "nowrap",
+                gap: 8,
+                flexShrink: 0,
+                position: "sticky",
+                top: 0,
+                zIndex: 20,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {/* Back button for mobile */}
+                <button
+                  onClick={() => setActiveOtherUserId("")}
+                  style={{
+                    background: "#f1f5f9",
+                    border: "none",
+                    borderRadius: 8,
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: "#334155",
+                  }}
+                  aria-label="Kembali ke daftar pesan"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+
                 <div
                   style={{
-                    width: 42,
-                    height: 42,
+                    width: 38,
+                    height: 38,
                     borderRadius: "50%",
                     background: activeThread.otherUser.avatarColor || "#2563eb",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: 700,
                     color: "#fff",
                   }}
@@ -426,15 +475,15 @@ function MessagesContent() {
                   {activeThread.otherUser.initials}
                 </div>
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: "#0f172a" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>
                       {activeThread.otherUser.name}
                     </span>
-                    <span style={{ fontSize: 11, padding: "2px 8px", background: activeThread.otherUser.role === "investor" ? "#f0fdf4" : "#eff6ff", color: activeThread.otherUser.role === "investor" ? "#16a34a" : "#2563eb", borderRadius: 999, fontWeight: 700, textTransform: "capitalize" }}>
+                    <span style={{ fontSize: 10, padding: "1px 6px", background: activeThread.otherUser.role === "investor" ? "#f0fdf4" : "#eff6ff", color: activeThread.otherUser.role === "investor" ? "#16a34a" : "#2563eb", borderRadius: 999, fontWeight: 700, textTransform: "capitalize" }}>
                       {activeThread.otherUser.role}
                     </span>
                   </div>
-                  <div style={{ fontSize: 12, marginTop: 1 }}>
+                  <div style={{ fontSize: 11, marginTop: 1 }}>
                     {isOtherTyping ? (
                       <span style={{ color: "#16a34a", fontWeight: 700 }}>
                         sedang mengetik...
@@ -467,17 +516,20 @@ function MessagesContent() {
               </div>
             </div>
 
-            {/* Message Stream */}
+            {/* Message Stream (ONLY this section scrolls) */}
             <div
               ref={messagesContainerRef}
               onScroll={handleContainerScroll}
+              className="chat-room-stream"
               style={{
-                flex: 1,
+                flex: "1 1 0%",
+                minHeight: 0,
                 overflowY: "auto",
-                padding: "24px",
+                WebkitOverflowScrolling: "touch",
+                padding: "16px 14px 20px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 12,
+                gap: 10,
               }}
             >
               {/* Privacy Notice Banner */}
@@ -574,32 +626,39 @@ function MessagesContent() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Bar */}
+            {/* Input Bar (Sticky / Locked Bottom above safe area) */}
             <form
               onSubmit={handleSend}
+              className="chat-room-input"
               style={{
-                padding: "16px 24px",
-                background: "#fff",
+                padding: "12px 14px",
+                background: "#ffffff",
                 borderTop: "1px solid #e2e8f0",
                 display: "flex",
-                gap: 12,
+                gap: 10,
                 alignItems: "center",
+                flexShrink: 0,
+                position: "sticky",
+                bottom: 0,
+                zIndex: 30,
+                boxShadow: "0 -4px 12px rgba(0,0,0,0.04)",
               }}
             >
               <input
                 type="text"
                 value={newMessage}
                 onChange={handleInputChange}
-                placeholder={`Ketik pesan untuk ${activeThread.otherUser.name}...`}
+                placeholder={`Ketik pesan untuk ${activeThread.otherUser.name.split(" ")[0]}...`}
                 style={{
                   flex: 1,
-                  padding: "12px 18px",
+                  padding: "12px 16px",
                   borderRadius: 12,
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid #cbd5e1",
                   background: "#f8fafc",
                   fontSize: 14,
                   outline: "none",
                   color: "#0f172a",
+                  boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)",
                 }}
               />
               <button
@@ -609,7 +668,7 @@ function MessagesContent() {
                   width: 44,
                   height: 44,
                   borderRadius: 12,
-                  background: newMessage.trim() ? "linear-gradient(135deg, #16a34a, #059669)" : "#e2e8f0",
+                  background: newMessage.trim() ? "linear-gradient(135deg, #16a34a, #059669)" : "#cbd5e1",
                   color: "#fff",
                   border: "none",
                   display: "flex",
@@ -618,15 +677,18 @@ function MessagesContent() {
                   cursor: newMessage.trim() ? "pointer" : "not-allowed",
                   flexShrink: 0,
                   transition: "all 0.15s ease",
+                  boxShadow: newMessage.trim() ? "0 2px 8px rgba(22,163,74,0.35)" : "none",
                 }}
+                aria-label="Kirim pesan"
               >
-                <Send size={17} />
+                <Send size={18} />
               </button>
             </form>
           </div>
         ) : (
-          /* VentureBridge Custom Theme Hub Empty Screen */
+          /* VentureBridge Custom Theme Hub Empty Screen (Desktop only) */
           <div
+            className="messages-empty-pane hidden-mobile"
             style={{
               flex: 1,
               display: "flex",
@@ -664,7 +726,7 @@ function MessagesContent() {
             </p>
 
             {/* Feature Highlights Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, maxWidth: 640, marginBottom: 32 }}>
+            <div className="messages-features-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, maxWidth: 640, marginBottom: 32 }}>
               <div style={{ background: "#fff", padding: "16px", borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "left" }}>
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
                   <Handshake size={18} color="#16a34a" />
@@ -850,6 +912,72 @@ function MessagesContent() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          /* In Active Chat mode: Fullscreen locked roomchat like WhatsApp Mobile */
+          .in-active-chat .mobile-bottom-nav {
+            display: none !important;
+          }
+          .in-active-chat .messages-main-wrapper {
+            position: fixed !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100vw !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            z-index: 100 !important;
+          }
+
+          .messages-main-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: calc(100dvh - var(--mobile-bottom-nav-height)) !important;
+            max-height: calc(100dvh - var(--mobile-bottom-nav-height)) !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: relative !important;
+          }
+          .messages-features-grid {
+            grid-template-columns: 1fr !important;
+            max-width: 100% !important;
+          }
+          .mobile-hidden {
+            display: none !important;
+          }
+          .mobile-full {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 1 !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            overflow: hidden !important;
+          }
+          .chat-room-stream {
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .chat-room-input {
+            padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px)) 14px !important;
+            background: #ffffff !important;
+            border-top: 1px solid #e2e8f0 !important;
+            flex-shrink: 0 !important;
+            position: sticky !important;
+            bottom: 0 !important;
+            z-index: 50 !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

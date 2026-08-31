@@ -101,6 +101,7 @@ export default function OpportunityDetailPage({
       </div>
 
         <div
+          className="opportunity-detail-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 300px",
@@ -612,6 +613,17 @@ export default function OpportunityDetailPage({
         {modals}
       </div>
       <Footer />
+
+      <style>{`
+        @media (max-width: 1024px) {
+          .opportunity-detail-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .opportunity-detail-grid > div:last-child {
+            order: -1;
+          }
+        }
+      `}</style>
     </div>
   );
 }

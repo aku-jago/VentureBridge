@@ -56,7 +56,7 @@ export default function ExploreHubPage() {
       </div>
 
       {/* Two Category Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 48 }}>
+      <div className="explore-category-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 48 }}>
         {/* Ide Bisnis */}
         <Link href="/explore/ideas" style={{ textDecoration: "none" }}>
           <div
@@ -188,6 +188,7 @@ export default function ExploreHubPage() {
 
       {/* Featured Ads Banner */}
       <div
+        className="ads-banner"
         style={{
           background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
           borderRadius: 20,
@@ -196,6 +197,7 @@ export default function ExploreHubPage() {
           alignItems: "center",
           justifyContent: "space-between",
           gap: 20,
+          flexWrap: "wrap",
         }}
       >
         <div>
@@ -252,8 +254,18 @@ export default function ExploreHubPage() {
     return (
       <div className="dashboard-layout">
         <DashboardSidebar />
-        <main className="dashboard-content" style={{ padding: "36px 40px" }}>
+        <main className="dashboard-content">
           {hubContent}
+
+          {/* Responsive Styles */}
+          <style>{`
+            @media (max-width: 768px) {
+              .explore-category-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+              .ads-banner { padding: 20px 20px !important; flex-direction: column !important; align-items: flex-start !important; }
+              .ads-banner > div:last-child { width: 100%; }
+              .ads-banner > div:last-child a { flex: 1; text-align: center; }
+            }
+          `}</style>
         </main>
       </div>
     );
@@ -265,6 +277,16 @@ export default function ExploreHubPage() {
       <TopNavBar />
       <main style={{ flex: 1, padding: "48px 24px" }}>
         {hubContent}
+
+        {/* Responsive Styles */}
+        <style>{`
+          @media (max-width: 768px) {
+            .explore-category-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+            .ads-banner { padding: 20px 20px !important; flex-direction: column !important; align-items: flex-start !important; }
+            .ads-banner > div:last-child { width: 100%; }
+            .ads-banner > div:last-child a { flex: 1; text-align: center; }
+          }
+        `}</style>
       </main>
       <Footer />
     </div>

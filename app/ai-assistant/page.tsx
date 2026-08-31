@@ -284,6 +284,7 @@ export default function AIAssistantPublicPage() {
           </div>
 
           <div
+            className="ai-results-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -390,6 +391,7 @@ export default function AIAssistantPublicPage() {
 
       {/* Feature Pillars */}
       <div
+        className="ai-features-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
@@ -519,6 +521,16 @@ export default function AIAssistantPublicPage() {
       <TopNavBar />
       <main style={{ flex: 1 }}>{pageContent}</main>
       <Footer />
+
+      <style>{`
+        @media (max-width: 768px) {
+          .ai-results-grid { grid-template-columns: 1fr !important; }
+          .ai-features-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .ai-features-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }

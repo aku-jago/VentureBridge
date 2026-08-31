@@ -309,6 +309,7 @@ export default function InvestorDashboardPage() {
           </div>
 
           <div
+            className="investor-cards-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -397,6 +398,19 @@ export default function InvestorDashboardPage() {
           </div>
         </div>
       </main>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .investor-cards-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .investor-cards-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
