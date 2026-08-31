@@ -101,7 +101,7 @@ const MOCK_PROFILES: Record<string, MockProfile> = {
     avatarColor: "#2563eb",
     isVerified: true,
     roles: ["founder", "cofounder"],
-    joinedAt: "Januari 2024",
+    joinedAt: "Januari 2026",
     connections: 187,
     founderData: {
       ventures: [
@@ -132,7 +132,7 @@ const MOCK_PROFILES: Record<string, MockProfile> = {
     avatarColor: "#7c3aed",
     isVerified: true,
     roles: ["cofounder", "founder"],
-    joinedAt: "Maret 2024",
+    joinedAt: "Maret 2026",
     connections: 245,
     cofoundarData: {
       skills: ["Product Management", "UX Research", "Growth Hacking", "B2C", "B2B SaaS"],

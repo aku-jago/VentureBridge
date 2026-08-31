@@ -178,30 +178,19 @@ export function DashboardSidebar({
     <>
       {/* Logo + User */}
       <div style={{ padding: "20px 16px 16px" }}>
-        <Link
-          href="/"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            textDecoration: "none",
-            marginBottom: 20,
-          }}
-        >
-          <div
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 20 }}>
+          <img
+            src="/logo.png"
+            alt="Weaven Logo"
             style={{
-              width: 28,
-              height: 28,
-              background: "#2563eb",
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              objectFit: "cover",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
             }}
-          >
-            <Rocket size={15} color="#fff" />
-          </div>
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>
+          />
+          <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
             Weaven
           </span>
         </Link>
@@ -428,20 +417,17 @@ export function DashboardSidebar({
           }}
         >
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-            <div
+            <img
+              src="/logo.png"
+              alt="Weaven Logo"
               style={{
                 width: 28,
                 height: 28,
-                background: "#2563eb",
                 borderRadius: 7,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 2px 6px rgba(37, 99, 235, 0.4)",
+                objectFit: "cover",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
               }}
-            >
-              <Rocket size={15} color="#fff" />
-            </div>
+            />
             <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
               Weaven
             </span>
@@ -549,11 +535,9 @@ export function DashboardSidebar({
           <div className="mobile-nav-drawer">
             {/* Drawer Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 0" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 28, height: 28, background: "#2563eb", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Rocket size={14} color="#fff" />
-                </div>
-                <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Weaven</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <img src="/logo.png" alt="Weaven Logo" style={{ width: 28, height: 28, borderRadius: 7, objectFit: "cover" }} />
+                <span style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>Weaven</span>
               </div>
               <button
                 onClick={() => setDrawerOpen(false)}

@@ -92,12 +92,10 @@ export function AdminSidebar({
       {/* Logo */}
       <div style={{ padding: "20px 20px 16px" }}>
         <Link href="/admin/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 24 }}>
-          <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #7c3aed, #2563eb)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Shield size={17} color="#fff" />
-          </div>
+          <img src="/logo.png" alt="Weaven Logo" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} />
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>Admin Panel</div>
-            <div style={{ fontSize: 10, color: "#64748b" }}>Weaven</div>
+            <div style={{ fontSize: 10, color: "#94a3b8" }}>Weaven Indonesia</div>
           </div>
         </Link>
 

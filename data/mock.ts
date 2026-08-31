@@ -30,7 +30,7 @@ export const mockUsers: User[] = [
     verificationBadges: [
       { type: "campus", label: "Terverifikasi Kampus", issuedBy: "UGM" },
     ],
-    joinedAt: "2024-01-15",
+    joinedAt: "2026-01-15",
   },
   {
     id: "user-2",
@@ -61,7 +61,7 @@ export const mockUsers: User[] = [
     verificationBadges: [
       { type: "identity", label: "Terverifikasi" },
     ],
-    joinedAt: "2024-03-20",
+    joinedAt: "2026-03-20",
   },
   {
     id: "user-4",
@@ -99,7 +99,7 @@ export const mockOpportunities: Opportunity[] = [
     seekingRoles: ["investor"],
     verificationStatus: "verified",
     matchScore: 95,
-    createdAt: "2024-10-01",
+    createdAt: "2026-10-01",
     traction: "5.000+ pengguna aktif, 3 sekolah mitra",
     teamSize: 4,
   },
@@ -118,7 +118,7 @@ export const mockOpportunities: Opportunity[] = [
     seekingRoles: ["investor", "mentor"],
     verificationStatus: "verified",
     matchScore: 88,
-    createdAt: "2024-09-15",
+    createdAt: "2026-09-15",
     traction: "150+ petani mitra, Rp 500jt GMV",
     teamSize: 6,
   },
@@ -137,7 +137,7 @@ export const mockOpportunities: Opportunity[] = [
     seekingRoles: ["investor", "cofounder"],
     verificationStatus: "pending",
     matchScore: 72,
-    createdAt: "2024-11-01",
+    createdAt: "2026-11-01",
     teamSize: 3,
   },
   {
@@ -155,7 +155,7 @@ export const mockOpportunities: Opportunity[] = [
     seekingRoles: ["investor", "cofounder"],
     verificationStatus: "verified",
     matchScore: 85,
-    createdAt: "2024-08-20",
+    createdAt: "2026-08-20",
     traction: "200+ venue mitra, 15.000 MAU",
     teamSize: 8,
   },
@@ -174,7 +174,7 @@ export const mockOpportunities: Opportunity[] = [
     seekingRoles: ["investor"],
     verificationStatus: "verified",
     matchScore: 95,
-    createdAt: "2024-07-10",
+    createdAt: "2026-07-10",
     traction: "1.000+ petani terdaftar, 70% tingkat retensi",
     teamSize: 5,
   },
@@ -193,7 +193,7 @@ export const mockOpportunities: Opportunity[] = [
     seekingRoles: ["cofounder", "investor"],
     verificationStatus: "unverified",
     matchScore: 78,
-    createdAt: "2024-11-10",
+    createdAt: "2026-11-10",
     teamSize: 2,
   },
 ];
@@ -358,7 +358,7 @@ export const mockMatches: Match[] = [
       "Budi tertarik pada sektor EdTech dan memiliki rentang modal yang sesuai dengan EDUKITA. Rekam jejak investasinya di startup pendidikan tahap awal (Seed) sangat relevan.",
     status: "new",
     matchType: "investor",
-    createdAt: "2024-11-10",
+    createdAt: "2026-11-10",
   },
   {
     id: "match-2",
@@ -375,7 +375,7 @@ export const mockMatches: Match[] = [
     aiAnalysis: "Angel investor, fokus pada SaaS B2B.",
     status: "pending",
     matchType: "investor",
-    createdAt: "2024-11-09",
+    createdAt: "2026-11-09",
   },
 ];
 
@@ -426,7 +426,7 @@ export const mockInvestorTransactions: TokenTransaction[] = [
     type: "topup",
     amount: 50,
     description: "Top Up Paket Basic",
-    createdAt: "2024-11-01T10:00:00",
+    createdAt: "2026-11-01T10:00:00",
     status: "completed",
   },
   {
@@ -439,7 +439,7 @@ export const mockInvestorTransactions: TokenTransaction[] = [
     relatedOpportunityTitle: "EDUKITA",
     relatedUserId: "user-1",
     relatedUserName: "Dzakki N.",
-    createdAt: "2024-11-05T14:30:00",
+    createdAt: "2026-11-05T14:30:00",
     status: "completed",
   },
   {
@@ -448,7 +448,7 @@ export const mockInvestorTransactions: TokenTransaction[] = [
     type: "topup",
     amount: 110,
     description: "Top Up Paket Pro",
-    createdAt: "2024-11-08T09:15:00",
+    createdAt: "2026-11-08T09:15:00",
     status: "completed",
   },
   {
@@ -461,7 +461,7 @@ export const mockInvestorTransactions: TokenTransaction[] = [
     relatedOpportunityTitle: "FITSPACE",
     relatedUserId: "user-2",
     relatedUserName: "Budi S.",
-    createdAt: "2024-11-09T16:00:00",
+    createdAt: "2026-11-09T16:00:00",
     status: "completed",
   },
 ];
@@ -480,7 +480,7 @@ export const mockFounderTransactions: TokenTransaction[] = [
     relatedOpportunityTitle: "EDUKITA",
     relatedUserId: "user-2",
     relatedUserName: "Budi Santoso",
-    createdAt: "2024-11-05T14:30:00",
+    createdAt: "2026-11-05T14:30:00",
     status: "completed",
   },
   {
@@ -493,7 +493,7 @@ export const mockFounderTransactions: TokenTransaction[] = [
     relatedOpportunityTitle: "EDUKITA",
     relatedUserId: "user-4",
     relatedUserName: "Andi Wijaya",
-    createdAt: "2024-11-07T11:20:00",
+    createdAt: "2026-11-07T11:20:00",
     status: "completed",
   },
   {
@@ -502,7 +502,7 @@ export const mockFounderTransactions: TokenTransaction[] = [
     type: "withdraw",
     amount: -20,
     description: "Withdraw token ke rekening",
-    createdAt: "2024-11-10T08:00:00",
+    createdAt: "2026-11-10T08:00:00",
     status: "completed",
   },
 ];
@@ -521,7 +521,7 @@ export const mockTopUpRequests: TopUpRequest[] = [
     amount: 100000,
     tokens: 50,
     status: "waiting",
-    requestedAt: "2024-11-12T13:45:00",
+    requestedAt: "2026-11-12T13:45:00",
   },
   {
     id: "topup-2",
@@ -533,8 +533,8 @@ export const mockTopUpRequests: TopUpRequest[] = [
     amount: 200000,
     tokens: 110,
     status: "confirmed",
-    requestedAt: "2024-11-08T09:00:00",
-    confirmedAt: "2024-11-08T09:15:00",
+    requestedAt: "2026-11-08T09:00:00",
+    confirmedAt: "2026-11-08T09:15:00",
   },
 ];
 
@@ -553,8 +553,8 @@ export const mockWithdrawRequests: WithdrawRequest[] = [
     accountNumber: "1234567890",
     accountName: "Dzakki Naufal",
     status: "processed",
-    requestedAt: "2024-11-10T08:00:00",
-    processedAt: "2024-11-10T10:30:00",
+    requestedAt: "2026-11-10T08:00:00",
+    processedAt: "2026-11-10T10:30:00",
   },
 ];
 
@@ -603,9 +603,9 @@ export const mockAdsRequests: AdsRequest[] = [
     amount: 249000,
     durationDays: 7,
     status: "active",
-    requestedAt: "2024-11-01T09:00:00",
-    activatedAt: "2024-11-01T14:00:00",
-    expiresAt: "2024-11-08T14:00:00",
+    requestedAt: "2026-11-01T09:00:00",
+    activatedAt: "2026-11-01T14:00:00",
+    expiresAt: "2026-11-08T14:00:00",
   },
   {
     id: "ads-req-2",
@@ -621,7 +621,7 @@ export const mockAdsRequests: AdsRequest[] = [
     durationDays: 3,
     status: "waiting",
     paymentProofNote: "Sudah transfer via BCA Mobile jam 10:15",
-    requestedAt: "2024-11-12T10:00:00",
+    requestedAt: "2026-11-12T10:00:00",
   },
 ];
 
@@ -644,9 +644,9 @@ export const mockCapexListings: CapexListing[] = [
     sector: ["F&B", "Retail", "Kantor"],
     verificationStatus: "verified",
     facilities: ["Listrik 2200W", "Air PDAM", "WiFi siap", "Parkir", "AC"],
-    createdAt: "2024-10-05",
+    createdAt: "2026-10-05",
     isAds: true,
-    adsExpiresAt: "2024-11-15",
+    adsExpiresAt: "2026-11-15",
   },
   {
     id: "capex-2",
@@ -663,7 +663,7 @@ export const mockCapexListings: CapexListing[] = [
     sector: ["Hospitality", "F&B", "Tourism"],
     verificationStatus: "verified",
     facilities: ["SHM", "IMB", "Akses jalan aspal", "PLN tersedia"],
-    createdAt: "2024-09-20",
+    createdAt: "2026-09-20",
   },
   {
     id: "capex-3",
@@ -680,7 +680,7 @@ export const mockCapexListings: CapexListing[] = [
     sector: ["Logistik", "E-Commerce", "Manufaktur"],
     verificationStatus: "verified",
     facilities: ["Loading Dock", "Listrik 33KVA", "Plafon 8m", "CCTV", "Satpam 24 jam"],
-    createdAt: "2024-10-15",
+    createdAt: "2026-10-15",
   },
   {
     id: "capex-4",
@@ -697,7 +697,7 @@ export const mockCapexListings: CapexListing[] = [
     sector: ["Tech", "Startup", "Konsultan"],
     verificationStatus: "pending",
     facilities: ["Internet 100Mbps", "AC", "Meeting Room", "Pantry", "Resepsionis"],
-    createdAt: "2024-11-01",
+    createdAt: "2026-11-01",
   },
   {
     id: "capex-5",
@@ -714,6 +714,6 @@ export const mockCapexListings: CapexListing[] = [
     sector: ["Hospitality", "F&B", "Retail"],
     verificationStatus: "unverified",
     facilities: ["SHM", "3 Lantai", "Parkir", "Heritage Building"],
-    createdAt: "2024-11-05",
+    createdAt: "2026-11-05",
   },
 ];

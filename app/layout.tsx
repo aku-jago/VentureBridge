@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   description:
     "Weaven is where ideas, capital, talent, and assets are woven into ventures. Alone, they are resources. Together, they become a venture.",
   keywords: ["startup", "investor", "Indonesia", "bisnis", "peluang", "co-founder", "talent", "modal", "assets", "ventures", "Weaven"],
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "Weaven — Weaving Possibilities into Ventures",
     description: "Weaven is where ideas, capital, talent, and assets are woven into ventures. Alone, they are resources. Together, they become a venture.",

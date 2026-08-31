@@ -30,21 +30,19 @@ export function Footer() {
         }}
       >
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img
+            src="/logo.png"
+            alt="Weaven Logo"
             style={{
               width: 28,
               height: 28,
-              background: "#2563eb",
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              borderRadius: 7,
+              objectFit: "cover",
+              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.08)",
             }}
-          >
-            <Rocket size={15} color="#fff" />
-          </div>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>
+          />
+          <span style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>
             Weaven
           </span>
         </div>
@@ -68,7 +66,7 @@ export function Footer() {
 
         {/* Copyright */}
         <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-          © 2024 Weaven Indonesia. Weaving Possibilities into Ventures.
+          © 2026 Weaven Indonesia. Weaving Possibilities into Ventures.
         </p>
       </div>
     </footer>

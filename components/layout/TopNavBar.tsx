@@ -76,19 +76,17 @@ export function TopNavBar({ variant = "public" }: TopNavBarProps) {
               flexShrink: 0,
             }}
           >
-            <div
+            <img
+              src="/logo.png"
+              alt="Weaven Logo"
               style={{
                 width: 32,
                 height: 32,
-                background: "#2563eb",
                 borderRadius: 8,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                objectFit: "cover",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.12)",
               }}
-            >
-              <Rocket size={16} color="#fff" />
-            </div>
+            />
             <span
               style={{
                 fontSize: 17,
@@ -389,11 +387,9 @@ export function TopNavBar({ variant = "public" }: TopNavBarProps) {
           >
             {/* Drawer header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid #f3f4f6" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 28, height: 28, background: "#2563eb", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Rocket size={14} color="#fff" />
-                </div>
-                <span style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>Weaven</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <img src="/logo.png" alt="Weaven Logo" style={{ width: 28, height: 28, borderRadius: 7, objectFit: "cover" }} />
+                <span style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>Weaven</span>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}

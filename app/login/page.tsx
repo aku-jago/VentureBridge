@@ -65,25 +65,23 @@ export default function LoginPage() {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 8,
+          gap: 10,
           textDecoration: "none",
           marginBottom: 24,
         }}
       >
-        <div
+        <img
+          src="/logo.png"
+          alt="Weaven Logo"
           style={{
-            width: 38,
-            height: 38,
-            background: "#2563eb",
+            width: 40,
+            height: 40,
             borderRadius: 10,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            objectFit: "cover",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
           }}
-        >
-          <Rocket size={20} color="#fff" />
-        </div>
-        <span style={{ fontSize: 22, fontWeight: 800, color: "#111827" }}>
+        />
+        <span style={{ fontSize: 24, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
           Weaven
         </span>
       </Link>
@@ -303,8 +301,8 @@ export default function LoginPage() {
 
       {/* Footer */}
       <p style={{ marginTop: 24, fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
-        © 2024 Weaven Indonesia. Weaving Possibilities into Ventures.{" "}
-        <Link href="/terms" style={{ color: "#6b7280" }}>Syarat & Ketentuan</Link>
+        © 2026 Weaven Indonesia. Weaving Possibilities into Ventures.{" "}
+        <Link href="/terms" style={{ color: "#6b7280" }}>Syarat &amp; Ketentuan</Link>
         {" · "}
         <Link href="/privacy" style={{ color: "#6b7280" }}>Privasi</Link>
       </p>
